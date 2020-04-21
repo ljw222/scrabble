@@ -1,0 +1,1 @@
+type letter = string list
