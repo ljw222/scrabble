@@ -17,6 +17,24 @@ type tile = {
   point: int;
   location: location_id;
 }
+
+let all_tiles = [('A',1); ('B',3); ('C',3); ('D',2); ('E',1); ('F',4); ('G',2); 
+                 ('H',4); ('I',1); ('J',8); ('K',5); ('L',1); ('M',3); ('N',1); 
+                 ('O',1); ('P',3); ('Q',10);('R',1); ('S',1); ('T',1); ('U',1); 
+                 ('V',4); ('W',4); ('X',8); ('Y',4); ('Z',10)] 
+
+let rec create_init_tiles letter_points acc counter =
+  match letter_points with
+  | [] -> acc
+  | h::t -> let new_tile = 
+              {id=counter;
+               letter=fst h;
+               point=snd h;
+               location=Bag;} in create_init_tiles t (new_tile::acc) (counter+1)
+
+let init_tiles = 
+  create_init_tiles (all_tiles@all_tiles@all_tiles@all_tiles) [] 0
+
 type bag = {
   contents: tile list;
 }
@@ -38,7 +56,6 @@ type board ={
   cells : (grid * contents_option) list;
   point_bonus : (grid * int) list;
 }
-
 
 (** tuple that has location as key and letter at the grid as value*)
 (* 
@@ -70,6 +87,3 @@ type t = {
   board: board;
   players: players list;
 }
-
-
-(* let bag = [("a";1);("b";2)] *)
