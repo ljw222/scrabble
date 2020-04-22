@@ -19,7 +19,7 @@ type location_id =
   |Bag 
 
 type tile = {
-  letter:char;
+  letter: char;
   point: int;
   start_loc: location_id;
 }
@@ -37,7 +37,17 @@ type board_info = {
   bonus: grid_bonus list;
 } *)
 
+type player = {
+  hand: tile list;
+  score: int;
+}
+
+type players = 
+  |Player1 of player
+  |Player2 of player
+
 type t = {
   location: location_id;
   tiles: tile list ;
+  turn: players;
 }
