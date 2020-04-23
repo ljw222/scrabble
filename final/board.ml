@@ -23,8 +23,8 @@ let all_tiles = [('A',1); ('B',3); ('C',3); ('D',2); ('E',1); ('F',4); ('G',2);
                  ('O',1); ('P',3); ('Q',10);('R',1); ('S',1); ('T',1); ('U',1); 
                  ('V',4); ('W',4); ('X',8); ('Y',4); ('Z',10)] 
 
-let rec create_init_tiles letter_points acc counter =
-  match letter_points with
+let rec create_init_tiles tiles_points acc counter =
+  match tiles_points with
   | [] -> acc
   | h::t -> let new_tile = 
               {id=counter;
@@ -39,38 +39,43 @@ type bag = {
   contents: tile list;
 }
 
+let init_bag = {contents = init_tiles}
+
 type contents_option = 
   | Some of tile
   | None
 
-(* type board_cell = {
-   grid : (x*y);
-   bonus: int;
-   tile : contents_option;
-   } *)
-type board ={
-  (* grid : grid; *)
-  (* contents : board_cell list; *)
-  (* bonus_grid : (grid * int); *)
-
+type board = {
   cells : (grid * contents_option) list;
   point_bonus : (grid * int) list;
 }
 
-(** tuple that has location as key and letter at the grid as value*)
-(* 
-type on_grid = 
-  | Some of grid 
-  | None *)
+let rec create_init_board acc x y = 
+  match x,y with
+  | 0,0 -> acc
+  | x,y ->
+    begin
+      if y = 0 then create_init_board (((x,y), None)::acc) (x-1) (10) else
+        match x,y with
+        | x,y -> 
+          if (y = 0 && x != 0) then create_init_board (((x,y), None)::acc) (x-1) (y)
+          else if (y != 0 && x < 10) then create_init_board (((x,y), None)::acc) (x) (y-1)
+          else create_init_board (((x,y), None)::acc) (x-1) (10)
+    end
 
-(* tile*location list *)
-(** tuple that has location as key and d as value*)
-(* 
-type board_info = {
-  tiles_contained: (tile*on_grid) list;
-  bonus: grid_bonus list;
-} *)
+let rec create_init_bonus1 acc x y = 
+  if x >= 0 && y >= 0 then create_init_bonus1 (((x,y),2)::acc) (x-1) (y-1)
+  else acc
 
+let rec create_init_bonus2 acc x y = 
+  if x = 5 && y = 5 then create_init_bonus2 acc (x-1) (y+1)
+  else if x >= 0 && y >= 0 then create_init_bonus2 (((x,y),2)::acc) (x-1) (y+1)
+  else acc
+
+let init_board = {
+  cells = create_init_board [] 10 10;
+  point_bonus = (create_init_bonus1 [] 10 10)@(create_init_bonus2 [] 10 0);
+}
 type player = {
   hand: tile list;
   score: int;
@@ -81,9 +86,7 @@ type players =
   |Player2 of player
 
 type t = {
-  (* location: location_id;
-     tiles: tile list ;
-     turn: players; *)
+  bag: tile list;
   board: board;
   players: players list;
 }

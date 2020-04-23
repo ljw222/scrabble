@@ -9,4 +9,7 @@ type t = {
   winning_score: int;
   state: game_state;
   player_turn: Board.players;
+  board: Board.board;
 }
+
+
