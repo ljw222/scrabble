@@ -1,5 +1,5 @@
-open Board
+(* open Scrabble
 
-type t = {
-  letters_available: Board.tile list
-}
+   type t = {
+   letters_available: Scrabble.tile list
+   } *)

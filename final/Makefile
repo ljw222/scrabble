@@ -1,4 +1,4 @@
-MODULES=board state hand main author
+MODULES=scrabble state hand main author
 OBJECTS=$(MODULES:=.cmo)
 MLS=$(MODULES:=.ml)
 MLIS=$(MODULES:=.mli)
@@ -26,7 +26,7 @@ finalcheck: check
 	bash finalcheck.sh
 
 zip:
-	zip adventure.zip *.ml* *.json _tags Makefile
+	zip scrabble.zip *.ml* *.json _tags Makefile
 	
 docs: docs-public docs-private
 	
@@ -43,4 +43,4 @@ docs-private: build
 
 clean:
 	ocamlbuild -clean
-	rm -rf doc.public doc.private adventure.zip
+	rm -rf doc.public doc.private scrabble.zip
