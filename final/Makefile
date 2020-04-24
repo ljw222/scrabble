@@ -1,4 +1,4 @@
-MODULES=scrabble state hand main author
+MODULES=scrabble state command main author
 OBJECTS=$(MODULES:=.cmo)
 MLS=$(MODULES:=.ml)
 MLIS=$(MODULES:=.mli)

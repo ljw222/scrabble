@@ -5,11 +5,21 @@ type game_state =
   | Ongoing
   | Done
 
+(* type t = string *)
 type t = {
   winning_score: int;
   state: game_state;
-  player_turn: Board.players;
-  board: Board.board;
+  player_turn: Scrabble.players;
+  board: Scrabble.board;
+  all_tiles: Scrabble.tile list;
 }
 
-
+let init_state scrabble_init = {
+  winning_score = 20;
+  state = Ongoing;
+  player_turn = 
+    (* Scrabble.(Player1 init_player1); *)
+    List.nth (scrabble_init.players) 0;
+  board = scrabble_init.board;
+  all_tiles = scrabble_init.all_tiles;
+}

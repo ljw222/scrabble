@@ -5,12 +5,10 @@
 type x = int
 type y = int 
 type grid= (x*y)
-
+type score = int
 type player = {
-  (* hand: tile list; *)
   score: int;
 }
-
 type players = 
   |Player1 of player
   |Player2 of player
@@ -22,7 +20,7 @@ type location_id =
 
 type tile = {
   id: int;
-  letter: char;
+  letter: Char.t;
   point: int;
   location: location_id;
 }
@@ -43,6 +41,7 @@ type t = {
 }
 
 let init_player1 = {score=0}
+let init_player2 = {score=0}
 
 let char_tiles = [('A',1); ('B',3); ('C',3); ('D',2); ('E',1); ('F',4); ('G',2); 
                   ('H',4); ('I',1); ('J',8); ('K',5); ('L',1); ('M',3); ('N',1); 
@@ -58,7 +57,8 @@ let rec create_init_tiles tiles_points acc counter =
                point=snd h;
                location=Bag;} in create_init_tiles t (new_tile::acc) (counter+1)
 
-let starting_tile = {id=0; letter='A'; point=1; location=Bag }
+let starting_tile = {id=0; letter='A'; point=1; location=Board (6,6)}
+(* all tiles in bag with starting_tile on board *)
 let all_tiles = 
   starting_tile::(create_init_tiles (char_tiles@char_tiles@char_tiles@char_tiles) [] 1)
 
@@ -66,26 +66,31 @@ let all_tiles =
     that are located in [location]*)
 let rec location_tile tiles location acc =
   match tiles with
-  | [] -> acc
+  | [] -> List.rev acc
   | h::t -> 
     if h.location = location then location_tile t location (h::acc) else 
       location_tile t location acc
 
-(** [choose_tile tiles player] all tiles in [tiles] with a random tile location 
-    changed to be in the hand of [player] *)
-let choose_tile tiles player =
-  let bag_tiles = location_tile tiles Bag [] in
-  let rand = Random.int((List.length bag_tiles) - 1) in
-  let tile = List.nth tiles rand in
-  let new_tile = 
-    {id=tile.id; letter=tile.letter; point= tile.point; location=Hand player} in
-  List.map (fun old_tile -> 
-      if old_tile.id = new_tile.id then new_tile else old_tile) tiles
+(** [choose_tile tiles player num_tiles] all tiles in [tiles] with a random tile location 
+    changed to be in the hand of [player] [num_tiles] times *)
+let rec choose_tile tiles player num_tiles =
+  if num_tiles = 0 then tiles 
+  else
+    let bag_tiles = location_tile tiles Bag [] in
+    let rand = Random.int((List.length bag_tiles) - 1) in
+    let tile = List.nth tiles rand in
+    let new_tile = 
+      {id=tile.id; letter=tile.letter; point= tile.point; location=Hand player} in
+    let updated_tiles = List.map (fun old_tile -> 
+        if old_tile.id = new_tile.id then new_tile else old_tile) tiles in
+    choose_tile updated_tiles player (num_tiles - 1)
 
-(** [choose_tile tiles player] all tiles in [tiles] with a random tile chose as 
-    the starting tile *)
-let choose_first_tile tiles frst_tile =
-  frst_tile::tiles
+(* deal 7 tiles to player1 *)
+let init_tiles_player1 = 
+  choose_tile all_tiles (Player1 init_player1) 7
+(* deal 7 tiles to player2 *)
+let init_tiles_player2 = 
+  choose_tile init_tiles_player1 (Player2 init_player1) 7
 
 let rec create_init_board acc x y = 
   match x,y with
@@ -117,7 +122,89 @@ let init_board = {
 }
 
 let init_state = {
-  all_tiles = all_tiles;
+  all_tiles = init_tiles_player2;
   board = init_board;
-  players = [Player1 init_player1];
+  players = [Player1 init_player1;Player2 init_player2];
+}
+
+(** [valid_cell cell board] is true if the [cell] is valid/availible [board] *)
+let valid_cell cell board = 
+  let valid_grid_params = List.mem_assoc cell board.cells in 
+  if not valid_grid_params then false
+  else 
+    let avail_grid = List.assoc cell board.cells in 
+    avail_grid = None
+
+(** [char_in_bag bag char] is true if a tile with the letter [char] is in 
+    tile bag [bag]. otherwise false *)
+let rec char_in_bag bag char = 
+  match bag with
+  | [] -> false
+  | h::t -> if h.letter = char then true else char_in_bag t char
+
+(** [valid_tile tile all_tiles] is true if [tile] is available in the bag of 
+    [all_tiles]. Otherwise false *)
+let valid_tile tile_letter all_tiles =
+  let bag_tiles = location_tile all_tiles Bag [] in
+  char_in_bag bag_tiles tile_letter 
+
+exception Invalid_Play
+
+(** [update_tile_loc tile_letter all_tiles cell acc] updates [all_tiles] with 
+    the tile in the bag with letter [tile_letter] to be in the board *)
+let rec update_tile_loc tile_letter all_tiles cell acc =
+  match all_tiles with
+  | [] -> acc
+  | h::t -> begin
+      if h.letter = tile_letter && h.location = Bag
+      then  
+        acc@({id=h.id;
+              letter=h.letter;
+              point=h.point;
+              location=Board cell;}::t)
+      else update_tile_loc tile_letter t cell (h::acc)
+    end
+
+(** [tile_to_update tiles_in_bag tile_letter] is the first tile in 
+    [tiles_in_bag] that has the letter [tile_letter]. 
+    Requires: [tiles_in_bag] contains a tile with letter [tile_letter] *)
+let rec tile_to_update tiles_in_bag tile_letter =
+  match tiles_in_bag with
+  | [] -> failwith "impossible"
+  | h::t -> if h.letter = tile_letter then h else tile_to_update t tile_letter
+
+(** [update_board_cells board_cells tile cell acc] updates contents of [cell]
+    in [board_cells] to contain [tile]*)
+let rec update_board_cells board_cells tile cell acc =
+  match board_cells with
+  | [] -> acc
+  | (g,c)::t -> 
+    if g = cell then acc@((cell, Some tile)::t)
+    else update_board_cells t tile cell ((g,c)::acc)
+
+(** [play cell tile_letter state] if the state when tile with [tile_letter] is 
+    put in [cell] given current state [state[ *)
+let play cell tile_letter state = 
+  if not (valid_cell cell state.board && valid_tile tile_letter state.all_tiles) 
+  then raise Invalid_Play
+  else begin
+    let tiles_in_bag = location_tile all_tiles Bag [] in 
+    let updated_tile = tile_to_update tiles_in_bag tile_letter in
+    let updated_board = 
+      {
+        cells= update_board_cells state.board.cells updated_tile cell [];
+        point_bonus=state.board.point_bonus;
+      } in
+    let updated_tiles = update_tile_loc tile_letter state.all_tiles cell [] in
+    {
+      all_tiles = updated_tiles;
+      board = updated_board;
+      players = state.players;
+    }
+  end
+
+let init_state = {
+  all_tiles = init_tiles_player2;
+  board = init_board;
+  players = [Player1 init_player1;Player2 init_player2];
 }

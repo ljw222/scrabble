@@ -1,12 +1,10 @@
 type x = int
 type y = int 
 type grid= (x*y)
-
+type score = int
 type player = {
-  (* hand: tile list; *)
   score: int;
 }
-
 type players = 
   |Player1 of player
   |Player2 of player
@@ -18,7 +16,7 @@ type location_id =
 
 type tile = {
   id: int;
-  letter: char;
+  letter: Char.t;
   point: int;
   location: location_id;
 }
