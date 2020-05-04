@@ -209,11 +209,11 @@ let init_state = {
   players = [Player1 init_player1;Player2 init_player2];
 }
 
-let rec print_board board acc x y = 
+let rec print_board board_cells acc x y = 
   if y = 0 && x = 0 then print_string("  0  1  2  3  4  5  6  7  8  9");
   if acc mod 10 = 0 then print_endline("");
   if x = 0 && y <> 10 then print_string(Int.to_string y);
-  match board with
+  match board_cells with
   | [] -> print_string " ";
   | (grid,contents)::t -> 
     begin
@@ -232,7 +232,7 @@ let rec print_board board acc x y =
         end
     end
 
-let get_init_board a = 
+let print_init_board a = 
   let board_obj = init_state.board.cells in
   print_board board_obj 0 0 0
 

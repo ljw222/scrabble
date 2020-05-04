@@ -55,6 +55,6 @@ val play: grid -> Char.t -> t -> t
 
 val print_board: ('a * contents_option) list -> int -> int -> int -> unit
 
-val get_init_board: 'a -> unit
+val print_init_board: 'a -> unit
 
 val get_board: t -> board
