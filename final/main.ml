@@ -1,19 +1,21 @@
 open Scrabble
-(* open Command *)
+open Command
 
-(* * [play_game f] starts the adventure in file [f]. *)
+(* * [play_game] starts the game. *)
 let play_game f =
-  failwith "Unimplemented"
+  (* let board = Scrabble.init_state.board *)
+  failwith "unimplemented"
 
 (** [main ()] prompts for the game to play, then starts it. *)
-let main () =
+let rec main () =
   ANSITerminal.(print_string [blue]
                   "\n\nWelcome to our Scrabble Inspired Game!\n");
-  (* print_endline "Please enter the name of the game file you want to load.\n"; *)
+  ANSITerminal.(print_string [blue]
+                  "\nType 'start' to begin!\n");
   print_string  "> ";
   match read_line () with
-  | exception End_of_file -> ()
-  | file_name -> play_game file_name
+  | "start" -> play_game 1
+  | _ -> main ()
 
 (* Execute the game engine. *)
 let () = main ()

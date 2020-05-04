@@ -28,7 +28,6 @@ type tile = {
 type contents_option = 
   | Some of tile
   | None
-
 type board = {
   cells : (grid * contents_option) list;
   point_bonus : (grid * int) list;
@@ -61,6 +60,7 @@ let starting_tile = {id=0; letter='A'; point=1; location=Board (6,6)}
 (* all tiles in bag with starting_tile on board *)
 let all_tiles = 
   starting_tile::(create_init_tiles (char_tiles@char_tiles@char_tiles@char_tiles) [] 1)
+(* (create_init_tiles (char_tiles@char_tiles@char_tiles@char_tiles) [] 1) *)
 
 (** [location_tile tiles location acc] is the list of tiles from [tiles] 
     that are located in [location]*)
@@ -97,12 +97,12 @@ let rec create_init_board acc x y =
   | 0,0 -> acc
   | x,y ->
     begin
-      if y = 0 then create_init_board (((x,y), None)::acc) (x-1) (10) else
+      if y = 0 then create_init_board (((x,y), None)::acc) (x-1) (9) else
         match x,y with
         | x,y -> 
           if (y = 0 && x != 0) then create_init_board (((x,y), None)::acc) (x-1) (y)
-          else if (y != 0 && x < 10) then create_init_board (((x,y), None)::acc) (x) (y-1)
-          else create_init_board (((x,y), None)::acc) (x-1) (10)
+          else if (y != 0 && x <= 9) then create_init_board (((x,y), None)::acc) (x) (y-1)
+          else create_init_board (((x,y), None)::acc) (x-1) (9)
     end
 
 let rec create_init_bonus1 acc x y = 
@@ -114,11 +114,11 @@ let rec create_init_bonus2 acc x y =
   else if x >= 0 && y >= 0 then create_init_bonus2 (((x,y),2)::acc) (x-1) (y+1)
   else acc
 
-let empty_cells = create_init_board [] 10 10
+let empty_cells = create_init_board [] 9 9
 
 let init_board = {
-  cells = ((6,6), Some starting_tile)::empty_cells;
-  point_bonus = (create_init_bonus1 [] 10 10)@(create_init_bonus2 [] 10 0);
+  cells = ((0,0), Some starting_tile)::empty_cells;
+  point_bonus = (create_init_bonus1 [] 9 9)@(create_init_bonus2 [] 9 0);
 }
 
 let init_state = {
@@ -208,3 +208,33 @@ let init_state = {
   board = init_board;
   players = [Player1 init_player1;Player2 init_player2];
 }
+
+let rec print_board board acc x y = 
+  if y = 0 && x = 0 then print_string("  0  1  2  3  4  5  6  7  8  9");
+  if acc mod 10 = 0 then print_endline("");
+  if x = 0 && y <> 10 then print_string(Int.to_string y);
+  match board with
+  | [] -> print_string " ";
+  | (grid,contents)::t -> 
+    begin
+      match contents with
+      | Some tile -> 
+        begin
+          print_string ("[" ^ (Char.escaped (tile.letter)) ^ "]");
+          if x = 9 then print_board t (acc + 1) 0 (y + 1)
+          else print_board t (acc + 1) (x + 1) y
+        end
+      | None ->
+        begin
+          print_string "[ ]";
+          if x = 9 then print_board t (acc + 1) 0 (y + 1)
+          else print_board t (acc + 1) (x + 1) y
+        end
+    end
+
+let get_init_board a = 
+  let board_obj = init_state.board.cells in
+  print_board board_obj 0 0 0
+
+let get_board state = 
+  state.board
