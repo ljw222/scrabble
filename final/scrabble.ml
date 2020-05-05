@@ -173,6 +173,22 @@ let rec update_tile_loc tile_letter all_tiles cell acc =
       else update_tile_loc tile_letter t cell (h::acc)
     end
 
+(** [tile_hand_to_board tile_letter all_tiles cell acc player] updates 
+    [all_tiles] with the tile in the hand of [player] with letter [tile_letter] 
+    to be in the board *)
+let rec tile_hand_to_board tile_letter all_tiles cell acc player =
+  match all_tiles with
+  | [] -> acc
+  | h::t -> begin
+      if h.letter = tile_letter && h.location = (Hand player)
+      then  
+        acc@({id=h.id;
+              letter=h.letter;
+              point=h.point;
+              location=Board cell;}::t)
+      else tile_hand_to_board tile_letter t cell (h::acc) player
+    end
+
 (** [tile_to_update tiles_in_bag tile_letter] is the first tile in 
     [tiles_in_bag] that has the letter [tile_letter]. 
     Requires: [tiles_in_bag] contains a tile with letter [tile_letter] *)
@@ -195,27 +211,41 @@ let rec update_board_cells board_cells tile cell acc =
       end
     else update_board_cells t tile cell ((g,c)::acc)
 
+(** [tile_to_update tiles_in_bag tile_letter] is the first tile in 
+    [tiles_in_bag] that has the letter [tile_letter]. 
+    Requires: [tiles_in_bag] contains a tile with letter [tile_letter] *)
+let rec add_tile_to_board tiles_in_hand tile_letter cell =
+  match tiles_in_hand with
+  | [] -> failwith "impossible"
+  | h::t -> 
+    if h.letter = tile_letter then 
+      {id=h.id; letter=h.letter; point=h.point; location=Board cell}
+    else add_tile_to_board t tile_letter cell
+
 (** [play cell tile_letter state] if the state when tile with [tile_letter] is 
     put in [cell] given current state [state] *)
 let play cell tile_letter state player = 
-  if (not (valid_cell cell state.board && valid_tile tile_letter state.all_tiles)) 
-  && valid_tile_in_hand tile_letter state.all_tiles player
-  then raise Invalid_Play
-  else begin
-    let tiles_in_bag = location_tile all_tiles Bag [] in 
-    let updated_tile = tile_to_update tiles_in_bag tile_letter in
-    let updated_board = 
+  if (valid_cell cell state.board) && (valid_tile_in_hand tile_letter state.all_tiles player) then
+    begin
+      let tiles_in_hand = location_tile state.all_tiles (Hand player) [] in 
+      let updated_tile = add_tile_to_board tiles_in_hand tile_letter cell in
+      let updated_board = 
+        {
+          cells= update_board_cells state.board.cells updated_tile cell [];
+          point_bonus=state.board.point_bonus;
+        } in
+      let updated_tiles = tile_hand_to_board tile_letter state.all_tiles cell
+          [] player in
       {
-        cells= update_board_cells state.board.cells updated_tile cell [];
-        point_bonus=state.board.point_bonus;
-      } in
-    let updated_tiles = update_tile_loc tile_letter state.all_tiles cell [] in
-    {
-      all_tiles = updated_tiles;
-      board = updated_board;
-      players = state.players;
-    }
-  end
+        all_tiles = updated_tiles;
+        board = updated_board;
+        players = state.players;
+      }
+    end
+  else (if (not (valid_cell cell state.board)) then 
+          (print_endline("Cell is not available"); raise Invalid_Play)
+        else (print_endline("Tile is not available in your hand"); 
+              raise Invalid_Play))
 
 let init_state = {
   all_tiles = init_tiles_player2;

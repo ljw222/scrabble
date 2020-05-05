@@ -9,7 +9,6 @@ open State
 (* remove command *)
 
 (* TOMORROW: *)
-(* valid tile in hand doesn't work (play function) *)
 (* tiles in hand doesn't update *)
 (* if turn is valid -> refill hand *)
 (* once done command is executed, should check if the tiles make correct 
