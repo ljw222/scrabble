@@ -38,6 +38,12 @@ type t = {
 let init_player1 = {score=0}
 let init_player2 = {score=0}
 
+let get_init_player1 () =
+  init_player1
+
+let get_init_player2 () =
+  init_player2
+
 let char_tiles = [('A',1); ('B',3); ('C',3); ('D',2); ('E',1); ('F',4); ('G',2); 
                   ('H',4); ('I',1); ('J',8); ('K',5); ('L',1); ('M',3); ('N',1); 
                   ('O',1); ('P',3); ('Q',10);('R',1); ('S',1); ('T',1); ('U',1); 
@@ -83,10 +89,10 @@ let rec choose_tile tiles player num_tiles =
 
 (* deal 7 tiles to player1 *)
 let init_tiles_player1 = 
-  choose_tile all_tiles (Player1 init_player1) 7
+  choose_tile all_tiles (Player1 init_player1) 8
 (* deal 7 tiles to player2 *)
 let init_tiles_player2 = 
-  choose_tile init_tiles_player1 (Player2 init_player1) 7
+  choose_tile init_tiles_player1 (Player2 init_player1) 8
 
 let rec create_init_board acc x y = 
   match x,y with
@@ -191,8 +197,9 @@ let rec update_board_cells board_cells tile cell acc =
 
 (** [play cell tile_letter state] if the state when tile with [tile_letter] is 
     put in [cell] given current state [state] *)
-let play cell tile_letter state = 
-  if not (valid_cell cell state.board && valid_tile tile_letter state.all_tiles) 
+let play cell tile_letter state player = 
+  if (not (valid_cell cell state.board && valid_tile tile_letter state.all_tiles)) 
+  && valid_tile_in_hand tile_letter state.all_tiles player
   then raise Invalid_Play
   else begin
     let tiles_in_bag = location_tile all_tiles Bag [] in 
@@ -252,3 +259,12 @@ let print_board board =
 
 let get_init_state () = 
   init_state
+
+let rec string_of_tiles hand_tiles =
+  match hand_tiles with 
+  | [] -> ""
+  | h::t -> (Char.escaped h.letter) ^ " " ^ (string_of_tiles t)
+
+let print_hand player game_state =
+  let hand_tiles = location_tile game_state.all_tiles (Hand player) [] in
+  print_string ("Hand:  [ " ^ (string_of_tiles hand_tiles) ^ "]")

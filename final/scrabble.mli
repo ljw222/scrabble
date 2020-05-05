@@ -51,7 +51,7 @@ val tile_to_update: tile list -> Char.t -> tile
 val update_board_cells: (grid * contents_option) list ->
   tile -> grid -> (grid * contents_option) list -> (grid * contents_option) list
 
-val play: grid -> Char.t -> t -> t
+val play: grid -> Char.t -> t -> players -> t
 
 val print_board: ('a * contents_option) list -> int -> int -> int -> unit
 
@@ -60,3 +60,9 @@ val print_init_board: unit -> unit
 val print_board: board -> unit
 
 val get_init_state: unit -> t
+
+val get_init_player1: unit -> player
+
+val get_init_player2: unit -> player
+
+val print_hand: players -> t -> unit

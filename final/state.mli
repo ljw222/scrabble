@@ -20,3 +20,7 @@ type t
 type game_state = 
   | Ongoing
   | Done
+
+val get_init_state: unit -> t
+
+val player_turn: t -> Scrabble.players

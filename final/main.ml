@@ -1,11 +1,17 @@
 open Scrabble
 open Command
+open State
 
 (* how to return back to tile match smnt if tile command isnt found *)
 (* tell that tile letter need to be in caps, cells need to be type (_,_) *)
 
-let rec play_game game =
+(* valid tile in hand doesn't work (play function) *)
+(* tiles in hand doesn't update *)
+
+let rec play_game game player =
   Scrabble.print_board game.board;
+  print_endline("");
+  Scrabble.print_hand player game;
   print_endline("");
   print_string("Enter 'cell (_,_)' to pick a cell to play");
   print_endline("");
@@ -19,25 +25,28 @@ let rec play_game game =
         | Tile t -> 
           let first = (Char.code (String.get (List.nth c 0) 1)) - 48 in 
           let second = (Char.code (String.get (List.nth c 0) 3)) - 48 in 
-          let new_game_state = Scrabble.play (first,second) (String.get (List.nth t 0) 0) game in
-          play_game new_game_state
+          let new_game_state = 
+            Scrabble.play (first,second) (String.get (List.nth t 0) 0) game player 
+          in
+          play_game new_game_state player
         | _ -> 
           print_endline("");
           print_string "Please enter a tile command. Try again";
           print_endline("");
-          play_game game
+          play_game game player
       end
     | Tile t -> 
       print_endline("");
       print_string "You must enter a cell location first. Try again";
       print_endline("");
-      play_game game
+      play_game game player
     | Done -> print_string "done";
+      (* change players *)
   with _ -> 
     print_endline("");
     print_string "This is not a valid command. Try again";
     print_endline("");
-    play_game game
+    play_game game player
 
 
 (* * [start_game] starts the game.
@@ -58,7 +67,9 @@ let rec main () =
                   "\nType 'start' to begin!\n");
   print_string  "> ";
   match read_line () with
-  | "start" -> play_game (Scrabble.get_init_state ())
+  | "start" -> 
+    play_game (Scrabble.get_init_state ()) 
+      (State.player_turn (State.get_init_state ()))
   | _ -> main ()
 
 (* Execute the game engine. *)
