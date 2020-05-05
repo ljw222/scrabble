@@ -5,8 +5,17 @@ open State
 (* how to return back to tile match smnt if tile command isnt found *)
 (* tell that tile letter need to be in caps, cells need to be type (_,_) *)
 
+(* LATER: *)
+(* remove command *)
+
+(* TOMORROW: *)
 (* valid tile in hand doesn't work (play function) *)
 (* tiles in hand doesn't update *)
+(* if turn is valid -> refill hand *)
+(* once done command is executed, should check if the tiles make correct 
+   words/are connected to existing words --> if not then remove all tiles 
+   from that turn*)
+
 
 let rec play_game game player =
   Scrabble.print_board game.board;
