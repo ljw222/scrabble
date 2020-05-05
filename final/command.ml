@@ -6,7 +6,7 @@ type command =
      | Tile of Scrabble.tile *)
   | Cell of object_phrase
   | Tile of object_phrase
-  | Done
+  | Check
 
 (* Cell (1,1)
    have function that determines if cell is avail on board
@@ -49,5 +49,5 @@ let parse str =
     | [] -> raise Empty
     | h::t -> if h = "cell" && (List.length t <> 0) then Cell t 
       else if h = "tile" && (List.length t <> 0) then Tile t 
-      else if h = "done" && (List.length t = 0) then Done
+      else if h = "check" && (List.length t = 0) then Check
       else raise Malformed

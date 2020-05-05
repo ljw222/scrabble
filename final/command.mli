@@ -4,7 +4,7 @@ type command =
      | Tile of Scrabble.tile *)
   | Cell of object_phrase
   | Tile of object_phrase
-  | Done
+  | Check
 
 (** Raised when an empty command is parsed. *)
 exception Empty

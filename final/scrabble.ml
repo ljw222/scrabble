@@ -298,3 +298,13 @@ let rec string_of_tiles hand_tiles =
 let print_hand player game_state =
   let hand_tiles = location_tile game_state.all_tiles (Hand player) [] in
   print_string ("Hand:  [ " ^ (string_of_tiles hand_tiles) ^ "]")
+
+let refill_hand state player = 
+  let tiles_in_hand = location_tile state.all_tiles (Hand player) [] in 
+  let num_to_refill = 7 - (List.length tiles_in_hand) in 
+  let updated_tiles = choose_tile state.all_tiles player num_to_refill in 
+  {
+    all_tiles = updated_tiles;
+    board = state.board;
+    players = state.players;
+  }

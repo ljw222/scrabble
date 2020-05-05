@@ -9,14 +9,13 @@ open State
 (* remove command *)
 
 (* TOMORROW: *)
-(* tiles in hand doesn't update *)
 (* if turn is valid -> refill hand *)
 (* once done command is executed, should check if the tiles make correct 
    words/are connected to existing words --> if not then remove all tiles 
    from that turn*)
 
-
 let rec play_game game player =
+  print_endline("");
   Scrabble.print_board game.board;
   print_endline("");
   Scrabble.print_hand player game;
@@ -48,8 +47,12 @@ let rec play_game game player =
       print_string "You must enter a cell location first. Try again";
       print_endline("");
       play_game game player
-    | Done -> print_string "done";
-      (* change players *)
+    | Check -> 
+      print_endline("");
+      print_string "Player 2 please confirm words";
+      print_endline("");
+      play_game (Scrabble.refill_hand game player) player
+  (* change players *)
   with _ -> 
     print_endline("");
     print_string "This is not a valid command. Try again";
