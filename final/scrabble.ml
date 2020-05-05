@@ -1,7 +1,3 @@
-(* Will have all the set up of the types, similar to adventure.ml*) 
-(* Consider the layout of the whole game, not just the board itself *)
-
-(** value of x and y [0:10] included*)
 type x = int
 type y = int 
 type grid= (x*y)
@@ -135,18 +131,24 @@ let valid_cell cell board =
     let avail_grid = List.assoc cell board.cells in 
     avail_grid = None
 
-(** [char_in_bag bag char] is true if a tile with the letter [char] is in 
-    tile bag [bag]. otherwise false *)
-let rec char_in_bag bag char = 
-  match bag with
+(** [char_in_collection collection char] is true if a tile with the letter [char] is in 
+    tile collection [collection]. otherwise false *)
+let rec char_in_collection collection char = 
+  match collection with
   | [] -> false
-  | h::t -> if h.letter = char then true else char_in_bag t char
+  | h::t -> if h.letter = char then true else char_in_collection t char
 
 (** [valid_tile tile all_tiles] is true if [tile] is available in the bag of 
     [all_tiles]. Otherwise false *)
 let valid_tile tile_letter all_tiles =
   let bag_tiles = location_tile all_tiles Bag [] in
-  char_in_bag bag_tiles tile_letter 
+  char_in_collection bag_tiles tile_letter 
+
+(** [valid_tile_in_hand tile_letter all_tiles player] is true if [tile] is available in the hand of 
+    [player]. Otherwise false *)
+let valid_tile_in_hand tile_letter all_tiles player =
+  let tiles_in_hand = location_tile all_tiles (Hand player) [] in
+  char_in_collection tiles_in_hand tile_letter 
 
 exception Invalid_Play
 
@@ -188,7 +190,7 @@ let rec update_board_cells board_cells tile cell acc =
     else update_board_cells t tile cell ((g,c)::acc)
 
 (** [play cell tile_letter state] if the state when tile with [tile_letter] is 
-    put in [cell] given current state [state[ *)
+    put in [cell] given current state [state] *)
 let play cell tile_letter state = 
   if not (valid_cell cell state.board && valid_tile tile_letter state.all_tiles) 
   then raise Invalid_Play
@@ -214,6 +216,7 @@ let init_state = {
   players = [Player1 init_player1;Player2 init_player2];
 }
 
+(** [print_board board_cells acc x y] prints [board_cells] *)
 let rec print_board board_cells acc x y = 
   if y = 0 && x = 0 then print_string("  0  1  2  3  4  5  6  7  8  9");
   if acc mod 10 = 0 then print_endline("");
@@ -237,9 +240,15 @@ let rec print_board board_cells acc x y =
         end
     end
 
-let print_init_board a = 
+(** [print_board ()] prints the initial board cells *)
+let print_init_board () = 
   let board_obj = init_state.board.cells in
   print_board board_obj 0 0 0
 
-let get_board state = 
-  state.board
+(** [print_board board] prints the board cells of [board] *)
+let print_board board = 
+  let board_obj = List.sort compare board.cells in
+  print_board board_obj 0 0 0
+
+let get_init_state () = 
+  init_state

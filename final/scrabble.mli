@@ -40,7 +40,7 @@ type t = {
 
 val valid_cell: grid -> board -> bool
 
-val char_in_bag: tile list -> Char.t -> bool
+val char_in_collection: tile list -> Char.t -> bool
 
 val valid_tile: Char.t -> tile list -> bool
 
@@ -55,6 +55,8 @@ val play: grid -> Char.t -> t -> t
 
 val print_board: ('a * contents_option) list -> int -> int -> int -> unit
 
-val print_init_board: 'a -> unit
+val print_init_board: unit -> unit
 
-val get_board: t -> board
+val print_board: board -> unit
+
+val get_init_state: unit -> t

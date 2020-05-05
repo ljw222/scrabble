@@ -47,7 +47,7 @@ let parse str =
   else
     match cleaned_lst with
     | [] -> raise Empty
-    | h::t -> if h = "cell" && (List.length t != 0) then Cell t 
-      else if h = "tile" && (List.length t = 0) then Tile t 
+    | h::t -> if h = "cell" && (List.length t <> 0) then Cell t 
+      else if h = "tile" && (List.length t <> 0) then Tile t 
       else if h = "done" && (List.length t = 0) then Done
       else raise Malformed
