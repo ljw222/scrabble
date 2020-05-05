@@ -48,8 +48,8 @@ val update_tile_loc: Char.t -> tile list -> grid -> tile list -> tile list
 
 val tile_to_update: tile list -> Char.t -> tile
 
-val update_board_cells: ('a * contents_option) list ->
-  tile -> 'a -> ('a * contents_option) list -> ('a * contents_option) list
+val update_board_cells: (grid * contents_option) list ->
+  tile -> grid -> (grid * contents_option) list -> (grid * contents_option) list
 
 val play: grid -> Char.t -> t -> t
 

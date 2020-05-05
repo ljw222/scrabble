@@ -56,7 +56,7 @@ let rec create_init_tiles tiles_points acc counter =
                point=snd h;
                location=Bag;} in create_init_tiles t (new_tile::acc) (counter+1)
 
-let starting_tile = {id=0; letter='A'; point=1; location=Board (6,6)}
+let starting_tile = {id=0; letter='A'; point=1; location=Board (0,0)}
 (* all tiles in bag with starting_tile on board *)
 let all_tiles = 
   starting_tile::(create_init_tiles (char_tiles@char_tiles@char_tiles@char_tiles) [] 1)
@@ -179,7 +179,12 @@ let rec update_board_cells board_cells tile cell acc =
   match board_cells with
   | [] -> acc
   | (g,c)::t -> 
-    if g = cell then acc@((cell, Some tile)::t)
+    if g = cell then 
+      begin
+        let new_tile = 
+          {id=tile.id; letter=tile.letter; point=tile.point; location=Board cell} in
+        acc@((cell, Some new_tile)::t)
+      end
     else update_board_cells t tile cell ((g,c)::acc)
 
 (** [play cell tile_letter state] if the state when tile with [tile_letter] is 
