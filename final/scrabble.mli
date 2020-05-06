@@ -68,3 +68,5 @@ val get_init_player2: unit -> player
 val print_hand: players -> t -> unit
 
 val refill_hand: t -> players -> t
+
+val check_if_valid: t -> t -> bool
