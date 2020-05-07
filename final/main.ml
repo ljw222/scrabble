@@ -6,11 +6,12 @@ open State
 (* tell that tile letter need to be in caps, cells need to be type (_,_) *)
 
 (* LATER: *)
-(* remove command *)
 (* points *)
-(* changing players *)
+(* fucntion that returns all of the new words made *)
 (* checking when game is won *)
-(* other player checking if they agree with words made (command? yes/no) *)
+(* score function / display score *)
+(* bonus points tile*)
+(* if no words can be made, switch to new hand tiles*)
 
 (* TONIGHT: *)
 (* once done command is executed, should check if the tiles make correct 
@@ -41,6 +42,12 @@ let rec play_game start_of_turn_game current_game player =
             Scrabble.play (first,second) (String.get (List.nth t 0) 0) current_game player 
           in
           play_game start_of_turn_game new_game_state player
+        | Remove -> 
+          let first = (Char.code (String.get (List.nth c 0) 1)) - 48 in 
+          let second = (Char.code (String.get (List.nth c 0) 3)) - 48 in 
+          let new_game_state = Scrabble.delete (first,second) current_game player in 
+          play_game start_of_turn_game new_game_state player
+        | Quit -> print_endline "Thanks for playing!"
         | _ -> 
           print_endline("");
           print_string "Please enter a tile command. Try again";
@@ -52,13 +59,40 @@ let rec play_game start_of_turn_game current_game player =
       print_string "You must enter a cell location first. Try again";
       print_endline("");
       play_game start_of_turn_game current_game player
+
     | Check -> 
-      print_endline("");
-      print_string "Player 2 please confirm words";
-      print_endline("");
       (* play_game (Scrabble.refill_hand current_game player) start_of_turn_game player *)
-      if Scrabble.check_if_valid start_of_turn_game current_game then print_endline("true")
-      else print_endline("false")
+      (* if Scrabble.check_if_valid start_of_turn_game current_game then print_endline("true")
+         else print_endline("false") *)
+      if Scrabble.check_if_valid start_of_turn_game current_game then (
+        print_endline("");
+        print_string "Other player please confirm words";
+        print_endline("");
+        match Command.parse (read_line ()) with
+        | Valid -> if (player = Scrabble.Player1 (Scrabble.get_init_player1 ()))
+          then (print_endline("");print_endline("Switch player!");
+                play_game current_game (Scrabble.refill_hand current_game player) 
+                  (Scrabble.Player2 (Scrabble.get_init_player2 ())))
+          else (print_endline("");print_endline("Switch player!");
+                play_game current_game (Scrabble.refill_hand current_game player) 
+                  (Scrabble.Player1 (Scrabble.get_init_player1 ())))
+        | Invalid -> print_endline("word not valid");
+          play_game start_of_turn_game current_game player
+        | Quit -> print_endline "Thanks for playing!"
+        | _ -> failwith "type valid/invalid"
+
+      )
+      else (print_endline("");
+            print_string "Please enter a valid move. Try again";
+            print_endline("");
+            play_game start_of_turn_game current_game player)
+    | Valid -> print_endline "not valid command rn"; 
+      play_game start_of_turn_game current_game player
+    | Invalid -> print_endline "not valid command rn"; 
+      play_game start_of_turn_game current_game player
+    | Remove-> print_endline "not valid command rn"; 
+      play_game start_of_turn_game current_game player
+    | Quit -> print_endline "Thanks for playing!"
 
   (* match Scrabble.check_if_valid start_of_turn_game current_game with
      | true -> print_endline("true")
@@ -71,6 +105,15 @@ let rec play_game start_of_turn_game current_game player =
     print_endline("");
     play_game start_of_turn_game current_game player
 
+(* check which player is currently playing (from the Scrabble.t list) *)
+(* and validate_check start_of_turn_game current_game player= 
+   match Command.parse (read_line ()) with
+   | Valid -> if (player = Scrabble.Player1 (Scrabble.get_init_player1 ()))
+   then (play_game current_game current_game (Scrabble.Player2 (Scrabble.get_init_player2 ())))
+   else play_game start_of_turn_game current_game player
+   | Invalid -> print_endline("word not valid");play_game start_of_turn_game current_game player
+   | _ -> failwith "type valid/invalid" *)
+(* make sure to remove all the new tiles from the board to the hand *)
 
 (** [main ()] prompts for the game to play, then starts it. *)
 let rec main () =
