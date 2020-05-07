@@ -70,3 +70,5 @@ val print_hand: players -> t -> unit
 val refill_hand: t -> players -> t
 
 val check_if_valid: t -> t -> bool
+
+val delete: grid -> t -> players -> t

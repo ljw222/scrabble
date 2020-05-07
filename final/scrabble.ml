@@ -138,6 +138,16 @@ let valid_cell cell board =
     let avail_grid = List.assoc cell board.cells in 
     avail_grid = None
 
+(** [occupied_cell cell board] is true if the [cell] contains a tile *)
+let occupied_cell cell board = 
+  let valid_grid_params = List.mem_assoc cell board.cells in 
+  if not valid_grid_params then false
+  else 
+    let occup_grid = List.assoc cell board.cells in 
+    match occup_grid with
+    | Some t -> true
+    | None -> false
+
 (** [char_in_collection collection char] is true if a tile with the letter [char] is in 
     tile collection [collection]. otherwise false *)
 let rec char_in_collection collection char = 
@@ -194,6 +204,22 @@ let rec tile_hand_to_board tile_letter all_tiles cell acc player =
       else tile_hand_to_board tile_letter t cell (h::acc) player
     end
 
+(** [tile_board_to_hand all_tiles cell acc player] updates 
+    [all_tiles] with the tile on the board with letter [tile_letter] 
+    to be in the hand of [player] *)
+let rec tile_board_to_hand all_tiles cell acc player =
+  match all_tiles with
+  | [] -> acc
+  | h::t -> begin
+      if h.location = (Board cell)
+      then  
+        acc@({id=h.id;
+              letter=h.letter;
+              point=h.point;
+              location=Hand player;}::t)
+      else tile_board_to_hand t cell (h::acc) player
+    end
+
 (** [tile_to_update tiles_in_bag tile_letter] is the first tile in 
     [tiles_in_bag] that has the letter [tile_letter]. 
     Requires: [tiles_in_bag] contains a tile with letter [tile_letter] *)
@@ -216,9 +242,18 @@ let rec update_board_cells board_cells tile cell acc =
       end
     else update_board_cells t tile cell ((g,c)::acc)
 
-(** [tile_to_update tiles_in_bag tile_letter] is the first tile in 
-    [tiles_in_bag] that has the letter [tile_letter]. 
-    Requires: [tiles_in_bag] contains a tile with letter [tile_letter] *)
+(** [rem_board_cells board_cells tile cell acc] updates contents of [cell]
+    in [board_cells] to None in the content*)
+let rec rem_board_cells board_cells cell acc =
+  match board_cells with
+  | [] -> acc
+  | (g,c)::t -> 
+    if g = cell then acc@((cell, None)::t)
+    else rem_board_cells t cell ((g,c)::acc)
+
+(** [add_tile_to_board tiles_in_hand tile_letter cell] adds [tile_letter] from
+    hand to [cell] on board.
+    Requires: [tiles_in_hand] contains a tile with letter [tile_letter] *)
 let rec add_tile_to_board tiles_in_hand tile_letter cell =
   match tiles_in_hand with
   | [] -> failwith "impossible"
@@ -226,6 +261,18 @@ let rec add_tile_to_board tiles_in_hand tile_letter cell =
     if h.letter = tile_letter then 
       {id=h.id; letter=h.letter; point=h.point; location=Board cell}
     else add_tile_to_board t tile_letter cell
+
+(** [return_tile_to_hand tiles_in_cell player] adds [tiles_in_cell] back to hand 
+    of [player] from the board.*)
+let rec return_tile_to_hand cell tiles_in_cell player =
+  match tiles_in_cell with
+  | [] -> failwith "impossible"
+  | h::t -> 
+    match h.location with
+    | Board grid -> if grid = cell then 
+        {id=h.id; letter=h.letter; point=h.point; location=Hand player}
+      else return_tile_to_hand cell t player
+    | _ -> failwith "not on board"
 
 (** [print_board board_cells acc x y] prints [board_cells] *)
 let rec print_board board_cells acc x y = 
@@ -459,4 +506,27 @@ let play cell tile_letter state player =
   else (if (not (valid_cell cell state.board)) then 
           (print_endline("Cell is not available"); raise Invalid_Play)
         else (print_endline("Tile is not available in your hand"); 
+              raise Invalid_Play))
+
+
+let delete cell state player = 
+  if (occupied_cell cell state.board) 
+  then (
+    (* let tile_at_grid = location_tile state.all_tiles (Board cell) [] in  *)
+    (* let update_tile = return_tile_to_hand cell tile_at_grid player in  *)
+    let update_board = 
+      {
+        cells = rem_board_cells state.board.cells cell [];
+        point_bonus=state.board.point_bonus;
+      } in
+    let updated_tiles = tile_board_to_hand state.all_tiles cell [] player in 
+    {
+      all_tiles = updated_tiles;
+      board = update_board;
+      players = state.players;
+    }
+  )
+  else (if (not (valid_cell cell state.board)) then 
+          (print_endline("Cell is not available"); raise Invalid_Play)
+        else (print_endline("Tile is not available in selected cell"); 
               raise Invalid_Play))
