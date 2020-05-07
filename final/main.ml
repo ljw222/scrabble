@@ -64,35 +64,35 @@ let rec play_game start_of_turn_game current_game player =
       (* play_game (Scrabble.refill_hand current_game player) start_of_turn_game player *)
       (* if Scrabble.check_if_valid start_of_turn_game current_game then print_endline("true")
          else print_endline("false") *)
-      if Scrabble.check_if_valid start_of_turn_game current_game then (
-        print_endline("");
-        print_string "Other player please confirm words";
-        print_endline("");
-        match Command.parse (read_line ()) with
-        | Valid -> if (player = Scrabble.Player1 (Scrabble.get_init_player1 ()))
+      (* if Scrabble.check_if_valid start_of_turn_game current_game then (
+         print_endline("");
+         print_string "Other player please confirm words";
+         print_endline("");
+         match Command.parse (read_line ()) with
+         | Valid -> if (player = Scrabble.Player1 (Scrabble.get_init_player1 ()))
           then (print_endline("");print_endline("Switch player!");
                 play_game current_game (Scrabble.refill_hand current_game player) 
                   (Scrabble.Player2 (Scrabble.get_init_player2 ())))
           else (print_endline("");print_endline("Switch player!");
                 play_game current_game (Scrabble.refill_hand current_game player) 
                   (Scrabble.Player1 (Scrabble.get_init_player1 ())))
-        | Invalid -> print_endline("word not valid");
+         | Invalid -> print_endline("word not valid");
           play_game start_of_turn_game current_game player
-        | Quit -> print_endline "Thanks for playing!"
-        | _ -> failwith "type valid/invalid"
-
-      )
-      else (print_endline("");
+         | Quit -> print_endline "Thanks for playing!"
+         | _ -> failwith "type valid/invalid"
+         )
+         else (print_endline("");
             print_string "Please enter a valid move. Try again";
             print_endline("");
             play_game start_of_turn_game current_game player)
-    | Valid -> print_endline "not valid command rn"; 
-      play_game start_of_turn_game current_game player
-    | Invalid -> print_endline "not valid command rn"; 
-      play_game start_of_turn_game current_game player
-    | Remove-> print_endline "not valid command rn"; 
-      play_game start_of_turn_game current_game player
-    | Quit -> print_endline "Thanks for playing!"
+         | Valid -> print_endline "not valid command rn"; 
+         play_game start_of_turn_game current_game player
+         | Invalid -> print_endline "not valid command rn"; 
+         play_game start_of_turn_game current_game player
+         | Remove-> print_endline "not valid command rn"; 
+         play_game start_of_turn_game current_game player
+         | Quit -> print_endline "Thanks for playing!" *)
+      check_helper start_of_turn_game current_game player
 
   (* match Scrabble.check_if_valid start_of_turn_game current_game with
      | true -> print_endline("true")
@@ -104,6 +104,29 @@ let rec play_game start_of_turn_game current_game player =
     print_string "This is not a valid command. Try again";
     print_endline("");
     play_game start_of_turn_game current_game player
+
+and check_helper start_of_turn_game current_game player =
+  if Scrabble.check_if_valid start_of_turn_game current_game then (
+    print_endline("");
+    print_string "Other player please confirm words";
+    print_endline("");
+    match Command.parse (read_line ()) with
+    | Valid -> if (player = Scrabble.Player1 (Scrabble.get_init_player1 ()))
+      then (print_endline("");print_endline("Switch player!");
+            play_game current_game (Scrabble.refill_hand current_game player) 
+              (Scrabble.Player2 (Scrabble.get_init_player2 ())))
+      else (print_endline("");print_endline("Switch player!");
+            play_game current_game (Scrabble.refill_hand current_game player) 
+              (Scrabble.Player1 (Scrabble.get_init_player1 ())))
+    | Invalid -> print_endline("word not valid");
+      play_game start_of_turn_game current_game player
+    | Quit -> print_endline "Thanks for playing!"
+    | _ -> check_helper start_of_turn_game current_game player
+  )
+  else (print_endline("");
+        print_string "Please enter a valid move. Try again";
+        print_endline("");
+        play_game start_of_turn_game current_game player)
 
 (* check which player is currently playing (from the Scrabble.t list) *)
 (* and validate_check start_of_turn_game current_game player= 
