@@ -15,12 +15,12 @@ open State
 
 (* TONIGHT: *)
 (* remove command *)
+(* -> works, but we need to modify by making sure player can not delete previous player's tiles
+   -> we can make a list [(grid,content)] of difference between the beg_state and current_state
+   -> and if the Cell c's c exist in that list, (List.mem c [(grid,content)]) then you can remove *)
 (* deletes all the new tiles that's been added after invalid move so the 
    player can start over from the beg_state*)
-(* once done command is executed, should check if the tiles make correct 
-   words/are connected to existing words --> if not then remove all tiles 
-   from that turn*)
-(* adding only one tile -> returns invalid move *)
+(* adding only one tile in (1,0) -> returns invalid move *)
 
 let rec play_game start_of_turn_game current_game player =
   print_endline("");
