@@ -5,6 +5,8 @@ type command =
   | Cell of object_phrase
   | Tile of object_phrase
   | Check
+  | Valid
+  | Invalid
 
 (** Raised when an empty command is parsed. *)
 exception Empty

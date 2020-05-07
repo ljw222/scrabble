@@ -7,6 +7,8 @@ type command =
   | Cell of object_phrase
   | Tile of object_phrase
   | Check
+  | Valid
+  | Invalid
 
 (* Cell (1,1)
    have function that determines if cell is avail on board
@@ -50,4 +52,6 @@ let parse str =
     | h::t -> if h = "cell" && (List.length t <> 0) then Cell t 
       else if h = "tile" && (List.length t <> 0) then Tile t 
       else if h = "check" && (List.length t = 0) then Check
+      else if h = "valid" && (List.length t = 0) then Valid
+      else if h = "invalid" && (List.length t = 0) then Invalid
       else raise Malformed
