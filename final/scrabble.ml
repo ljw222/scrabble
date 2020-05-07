@@ -448,7 +448,6 @@ let helper_col y_lst beg_cells x =
     (* case where original tiles are dispursed inbetween new word formed *)
   else col_check_if_gaps_filled beg_cells y_lst x ordered_y
 
-
 (* returns true if all tiles on board in new_state are valid in comparison to beg_state  *)
 let check_if_valid beg_state end_state =
   let beg_board_tiles = occupied_grids beg_state.board.cells [] in 
@@ -476,6 +475,15 @@ let check_if_valid beg_state end_state =
     (* if in same row, all y coordinates, if same col, all x  *)
     let new_grids = cells_of_tiles new_tiles [] in
     (* let contingent = [] in *)
+    if List.length new_tiles = 1 then 
+      begin
+        let y_list = (List.sort compare (snd (List.split new_grids))) in 
+        let check_same_row = helper_col y_list (cells_of_tiles beg_board_tiles []) first_x in
+        let x_list = (List.sort compare (fst (List.split new_grids))) in 
+        let check_same_col = helper_row x_list (cells_of_tiles beg_board_tiles []) first_y in 
+        check_same_row || check_same_col
+      end 
+    else
     if (same_row new_tiles first_x) then 
       let y_list = (List.sort compare (snd (List.split new_grids))) in 
       helper_col y_list (cells_of_tiles beg_board_tiles []) first_x
