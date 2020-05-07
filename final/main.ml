@@ -16,7 +16,6 @@ open State
 (* once done command is executed, should check if the tiles make correct 
    words/are connected to existing words --> if not then remove all tiles 
    from that turn*)
-(* function that checks if tile places is touching existing ones *)
 (* fucntion that returns all of the new words made *)
 (* switching players *)
 
