@@ -491,6 +491,167 @@ let check_if_valid beg_state end_state =
       let x_list = (List.sort compare (fst (List.split new_grids))) in 
       helper_row x_list (cells_of_tiles beg_board_tiles []) first_y
 
+(** [loc_in_tiles tiles grid_loc] is true if there is a tile in [tiles] with 
+    board location [grid_loc]. Otherwise false *)
+let rec loc_in_tiles tiles grid_loc = 
+  match tiles with
+  | [] -> false
+  | h::t -> 
+    match h.location with 
+    | Board g -> if g = grid_loc then true else loc_in_tiles t grid_loc
+    | _ -> loc_in_tiles t grid_loc
+
+(** [tile_with_loc tiles grid_loc] it the tile in [tiles] list with location on
+    the board of [grid_loc] *)
+let rec tile_with_loc tiles grid_loc = 
+  match tiles with
+  | [] -> failwith "tile in grid_loc is not in tiles list"
+  | h::t -> 
+    match h.location with 
+    | Board g -> if g = grid_loc then h else tile_with_loc t grid_loc
+    | _ -> tile_with_loc t grid_loc
+
+(** [tiles_in_row_above beg_board_tiles smallest_y_coord x_loc acc] is the list 
+    of tiles that are in the column above/next location 
+    [x_loc],[smallest_y_coord]*)
+let rec tiles_in_row_above beg_board_tiles smallest_y_coord x_loc acc =
+  let smallest_y_coord = smallest_y_coord - 1 in 
+  if loc_in_tiles beg_board_tiles (x_loc, smallest_y_coord) then 
+    begin
+      let new_tile = tile_with_loc beg_board_tiles (x_loc, smallest_y_coord) in
+      tiles_in_row_above beg_board_tiles smallest_y_coord x_loc (new_tile::acc)
+    end
+  else acc
+
+(** [tiles_in_col_left beg_board_tiles smallest_x_coord y_loc acc] is the list 
+    of tiles that are in the column to the left/next location 
+    [y_loc],[smallest_x_coord]*)
+let rec tiles_in_col_left beg_board_tiles smallest_x_coord y_loc acc =
+  let smallest_x_coord = smallest_x_coord - 1 in 
+  if loc_in_tiles beg_board_tiles (smallest_x_coord, y_loc) then 
+    begin
+      let new_tile = tile_with_loc beg_board_tiles (smallest_x_coord, y_loc) in
+      tiles_in_row_above beg_board_tiles smallest_x_coord y_loc (new_tile::acc)
+    end
+  else acc
+
+(** [tiles_in_row_below beg_board_tiles largest_y_coord x_loc acc] is the list 
+    of tiles that are in the column below/next location 
+    [x_loc],[smallest_y_coord]*)
+let rec tiles_in_row_below beg_board_tiles largest_y_coord x_loc acc =
+  let largest_y_coord = largest_y_coord + 1 in 
+  if loc_in_tiles beg_board_tiles (x_loc, largest_y_coord) then 
+    begin
+      let new_tile = tile_with_loc beg_board_tiles (x_loc, largest_y_coord) in
+      tiles_in_row_above beg_board_tiles largest_y_coord x_loc (new_tile::acc)
+    end
+  else acc
+
+(** [tiles_in_col_right beg_board_tiles largest_x_coord y_loc acc] is the list 
+    of tiles that are in the column to the right/next location 
+    [y_loc],[smallest_x_coord]*)
+let rec tiles_in_col_right beg_board_tiles largest_x_coord y_loc acc =
+  let largest_x_coord = largest_x_coord + 1 in 
+  if loc_in_tiles beg_board_tiles (largest_x_coord, y_loc) then 
+    begin
+      let new_tile = tile_with_loc beg_board_tiles (largest_x_coord, y_loc) in
+      tiles_in_row_above beg_board_tiles largest_x_coord y_loc (new_tile::acc)
+    end
+  else acc
+
+(** [entire_word_in_col beg_board_tiles y_list x_loc new_tiles] tiles of all 
+    tiles in word in column *)
+let entire_word_in_col beg_board_tiles y_list x_loc new_tiles =
+  (* lowest y coordinate of tiles in a col *)
+  let smallest_y_coord = List.nth y_list 0 in 
+  (* highest y coordinate of tiles in a col *)
+  let largest_y_coord = List.nth (List.rev y_list) 0 in 
+  let tiles_above = 
+    tiles_in_row_above beg_board_tiles smallest_y_coord x_loc [] in
+  let tiles_below = 
+    tiles_in_row_below beg_board_tiles largest_y_coord x_loc [] in
+  let all_tiles_in_word = tiles_above@new_tiles@tiles_below in
+  all_tiles_in_word
+
+(** [entire_word_in_col beg_board_tiles x_list y_loc new_tiles] tiles of all 
+    tiles in word in column *)
+let entire_word_in_col beg_board_tiles x_list y_loc new_tiles =
+  (* lowest y coordinate of tiles in a col *)
+  let smallest_x_coord = List.nth x_list 0 in 
+  (* highest y coordinate of tiles in a col *)
+  let largest_x_coord = List.nth (List.rev x_list) 0 in 
+  let tiles_left = 
+    tiles_in_col_left beg_board_tiles smallest_x_coord y_loc [] in
+  let tiles_right = 
+    tiles_in_col_right beg_board_tiles largest_x_coord y_loc [] in
+  let all_tiles_in_word = tiles_left@new_tiles@tiles_right in
+  all_tiles_in_word
+
+(** [in_same_row tile_grid_list x] is true if all tiles in [tile_grid_list] s
+    hare the same [x] coordinate*)
+let rec in_same_row (tile_list:tile list) y =
+  match tile_list with
+  | [] -> true
+  | tile::t -> 
+    begin 
+      let g = match tile.location with 
+        | Board grid -> grid
+        | _ -> failwith "not on grid" in
+      if (snd g) = y then true && (in_same_row t y) 
+      else false
+    end
+
+(** [in_same_col tile_grid_list y] is true if all tiles in [tile_grid_list] s
+    hare the same [y] coordinate*)
+let rec in_same_col (tile_list:tile list) x =
+  match tile_list with
+  | [] -> true
+  | tile::t -> 
+    begin 
+      let g = match tile.location with 
+        | Board grid -> grid
+        | _ -> failwith "not on grid" in
+      if (fst g) = x then true && (in_same_col t x) 
+      else false
+    end
+
+
+let new_words beg_state end_state =
+  let beg_board_tiles = occupied_grids beg_state.board.cells [] in 
+  let end_board_tiles = occupied_grids end_state.board.cells [] in 
+  let new_tiles = list_diff beg_board_tiles end_board_tiles [] in
+  (* aka x coord on our grid *)
+  let first_x =
+    match (List.nth new_tiles 0).location with 
+    | Board (x,y) -> x 
+    | _ -> failwith "not on board" in 
+  (* aka y coord on our grid *)
+  let first_y = 
+    match (List.nth new_tiles 0).location with 
+    | Board (x,y) -> y 
+    | _ -> failwith "not on board" in 
+
+  let new_grids = cells_of_tiles new_tiles [] in
+  (* if List.length new_tiles = 1 then  *)
+  if (in_same_row new_tiles first_y) then 
+    let x_list = (List.sort compare (snd (List.split new_grids)))  in 
+    failwith ""
+
+  else   
+    let y_list = (List.sort compare (fst (List.split new_grids))) in
+    (* entire_word_in_col *)
+    failwith "x"
+
+
+(* - check if row/col
+   - find primary word
+   - for each new tile placed, got left/right or up/down until find empty *)
+
+
+
+
+
+
 (** [play cell tile_letter state] if the state when tile with [tile_letter] is 
     put in [cell] given current state [state] *)
 let play cell tile_letter state player = 

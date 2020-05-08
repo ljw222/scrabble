@@ -11,7 +11,12 @@ open State
 (* checking when game is won *)
 (* score function / display score *)
 (* bonus points tile*)
-(* if no words can be made, switch to new hand tiles*)
+(* if no words can be made, switch to new hand tiles -> if no words can be made then switch entire hand *)
+
+(* BUGS *)
+(* you can remove any tile, not just ones placed in your turn *)
+(* you have to type cell inorder to place tile if type tile incorrectly *)
+(* if valid/invalid is spelled wrong then just goes to player2's turn *)
 
 (* TONIGHT: *)
 (* once done command is executed, should check if the tiles make correct 
@@ -61,44 +66,8 @@ let rec play_game start_of_turn_game current_game player =
       play_game start_of_turn_game current_game player
 
     | Check -> 
-      (* play_game (Scrabble.refill_hand current_game player) start_of_turn_game player *)
-      (* if Scrabble.check_if_valid start_of_turn_game current_game then print_endline("true")
-         else print_endline("false") *)
-      (* if Scrabble.check_if_valid start_of_turn_game current_game then (
-         print_endline("");
-         print_string "Other player please confirm words";
-         print_endline("");
-         match Command.parse (read_line ()) with
-         | Valid -> if (player = Scrabble.Player1 (Scrabble.get_init_player1 ()))
-          then (print_endline("");print_endline("Switch player!");
-                play_game current_game (Scrabble.refill_hand current_game player) 
-                  (Scrabble.Player2 (Scrabble.get_init_player2 ())))
-          else (print_endline("");print_endline("Switch player!");
-                play_game current_game (Scrabble.refill_hand current_game player) 
-                  (Scrabble.Player1 (Scrabble.get_init_player1 ())))
-         | Invalid -> print_endline("word not valid");
-          play_game start_of_turn_game current_game player
-         | Quit -> print_endline "Thanks for playing!"
-         | _ -> failwith "type valid/invalid"
-         )
-         else (print_endline("");
-            print_string "Please enter a valid move. Try again";
-            print_endline("");
-            play_game start_of_turn_game current_game player)
-         | Valid -> print_endline "not valid command rn"; 
-         play_game start_of_turn_game current_game player
-         | Invalid -> print_endline "not valid command rn"; 
-         play_game start_of_turn_game current_game player
-         | Remove-> print_endline "not valid command rn"; 
-         play_game start_of_turn_game current_game player
-         | Quit -> print_endline "Thanks for playing!" *)
       check_helper start_of_turn_game current_game player
-
-  (* match Scrabble.check_if_valid start_of_turn_game current_game with
-     | true -> print_endline("true")
-     | false -> print_endline("false")
-     | _ -> print_endline("not allowed") *)
-  (* change players *)
+    |_ -> failwith ""
   with _ -> 
     print_endline("");
     print_string "This is not a valid command. Try again";
