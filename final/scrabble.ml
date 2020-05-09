@@ -531,7 +531,7 @@ let rec tiles_in_col_left beg_board_tiles smallest_x_coord y_loc acc =
   if loc_in_tiles beg_board_tiles (smallest_x_coord, y_loc) then 
     begin
       let new_tile = tile_with_loc beg_board_tiles (smallest_x_coord, y_loc) in
-      tiles_in_row_above beg_board_tiles smallest_x_coord y_loc (new_tile::acc)
+      tiles_in_col_left beg_board_tiles smallest_x_coord y_loc (new_tile::acc)
     end
   else acc
 
@@ -543,7 +543,7 @@ let rec tiles_in_row_below beg_board_tiles largest_y_coord x_loc acc =
   if loc_in_tiles beg_board_tiles (x_loc, largest_y_coord) then 
     begin
       let new_tile = tile_with_loc beg_board_tiles (x_loc, largest_y_coord) in
-      tiles_in_row_above beg_board_tiles largest_y_coord x_loc (new_tile::acc)
+      tiles_in_row_below beg_board_tiles largest_y_coord x_loc (new_tile::acc)
     end
   else acc
 
@@ -555,7 +555,7 @@ let rec tiles_in_col_right beg_board_tiles largest_x_coord y_loc acc =
   if loc_in_tiles beg_board_tiles (largest_x_coord, y_loc) then 
     begin
       let new_tile = tile_with_loc beg_board_tiles (largest_x_coord, y_loc) in
-      tiles_in_row_above beg_board_tiles largest_x_coord y_loc (new_tile::acc)
+      tiles_in_col_right beg_board_tiles largest_x_coord y_loc (new_tile::acc)
     end
   else acc
 
@@ -575,7 +575,7 @@ let entire_word_in_col beg_board_tiles y_list x_loc new_tiles =
 
 (** [entire_word_in_col beg_board_tiles x_list y_loc new_tiles] tiles of all 
     tiles in word in column *)
-let entire_word_in_col beg_board_tiles x_list y_loc new_tiles =
+let entire_word_in_row beg_board_tiles x_list y_loc new_tiles =
   (* lowest y coordinate of tiles in a col *)
   let smallest_x_coord = List.nth x_list 0 in 
   (* highest y coordinate of tiles in a col *)
@@ -615,41 +615,45 @@ let rec in_same_col (tile_list:tile list) x =
       else false
     end
 
-
-let new_words beg_state end_state =
+(** [primary_word beg_state end_state] is the primary word formed from new 
+    tiles that are placed in [end_state] from [beg_state]*)
+let primary_word beg_state end_state =
   let beg_board_tiles = occupied_grids beg_state.board.cells [] in 
   let end_board_tiles = occupied_grids end_state.board.cells [] in 
-  let new_tiles = list_diff beg_board_tiles end_board_tiles [] in
-  (* aka x coord on our grid *)
+  let new_tiles = List.rev (list_diff beg_board_tiles end_board_tiles []) in
   let first_x =
     match (List.nth new_tiles 0).location with 
     | Board (x,y) -> x 
     | _ -> failwith "not on board" in 
-  (* aka y coord on our grid *)
   let first_y = 
     match (List.nth new_tiles 0).location with 
     | Board (x,y) -> y 
     | _ -> failwith "not on board" in 
 
   let new_grids = cells_of_tiles new_tiles [] in
-  (* if List.length new_tiles = 1 then  *)
+  if List.length new_tiles = 1 then 
+    begin
+      let y_list = (List.sort compare (snd (List.split new_grids))) in
+      let y_words = 
+        entire_word_in_col beg_board_tiles y_list first_x new_tiles in 
+      let x_list = (List.sort compare (fst (List.split new_grids))) in 
+      let x_words = 
+        entire_word_in_row beg_board_tiles x_list first_y new_tiles in 
+      if (List.length x_words) > (List.length y_words) then x_words else y_words
+    end
+  else
+    (* checking if visually in same column *)
   if (in_same_row new_tiles first_y) then 
-    let x_list = (List.sort compare (snd (List.split new_grids)))  in 
-    failwith ""
-
+    begin
+      let x_list = (List.sort compare (fst (List.split new_grids)))  in 
+      entire_word_in_row beg_board_tiles x_list first_y new_tiles
+    end
+    (* f visually in same row *)
   else   
-    let y_list = (List.sort compare (fst (List.split new_grids))) in
-    (* entire_word_in_col *)
-    failwith "x"
-
-
-(* - check if row/col
-   - find primary word
-   - for each new tile placed, got left/right or up/down until find empty *)
-
-
-
-
+    begin
+      let y_list = (List.sort compare (snd (List.split new_grids))) in
+      entire_word_in_col beg_board_tiles y_list first_x new_tiles
+    end
 
 
 (** [play cell tile_letter state] if the state when tile with [tile_letter] is 
