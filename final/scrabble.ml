@@ -615,9 +615,65 @@ let rec in_same_col (tile_list:tile list) x =
       else false
     end
 
-(** [primary_word beg_state end_state] is the primary word formed from new 
-    tiles that are placed in [end_state] from [beg_state]*)
-let primary_word beg_state end_state =
+(** [find_horiz_word beg_board_tiles new_tile acc] the horizontal word in 
+    [beg_board_tiles] to tile [new_tile] *)
+let find_horiz_word beg_board_tiles new_tile acc =
+  let y_coord = 
+    match new_tile.location with
+    | Board (x,y) -> y
+    | _ -> failwith "tile not on the board" in 
+  let x_coord = 
+    match new_tile.location with
+    | Board (x,y) -> x
+    | _ -> failwith "tile not on the board" in 
+  entire_word_in_col beg_board_tiles [y_coord] x_coord [new_tile]
+
+(** [find_vert_word beg_board_tiles new_tile acc] the vertical word in 
+    [beg_board_tiles] to tile [new_tile] *)
+let find_vert_word beg_board_tiles new_tile acc =
+  let y_coord = 
+    match new_tile.location with
+    | Board (x,y) -> y
+    | _ -> failwith "tile not on the board" in 
+  let x_coord = 
+    match new_tile.location with
+    | Board (x,y) -> x
+    | _ -> failwith "tile not on the board" in 
+  entire_word_in_row beg_board_tiles [x_coord] y_coord [new_tile]
+
+(* gets the secondary words (that are horizontal) when new tiles are visually 
+   in a COL *)
+(** [horizontal_secondary_words beg_board_tiles new_tiles acc] is the 
+    secondary words (which are in horizontal) to the new tiles placed when
+    they are vertically placed *)
+let rec horizontal_secondary_words beg_board_tiles new_tiles acc = 
+  match new_tiles with 
+  | [] -> acc
+  | new_tile::t -> 
+    begin
+      let word = find_horiz_word beg_board_tiles new_tile [] in
+      let new_words = horizontal_secondary_words beg_board_tiles t (word::acc) in 
+      List.filter (fun x -> if List.length x <> 1 then true else false) new_words
+    end
+
+(* gets the secondary words (that are vertical) when new tiles are visually 
+   in a ROW *)
+(** [vertical_secondary_words beg_board_tiles new_tiles acc] is the 
+    secondary words (which are in horizontal) to the new tiles placed when
+    they are vertically placed *)
+let rec vertical_secondary_words beg_board_tiles new_tiles acc = 
+  match new_tiles with 
+  | [] -> acc
+  | new_tile::t -> 
+    begin
+      let word = find_vert_word beg_board_tiles new_tile [] in
+      let new_words = vertical_secondary_words beg_board_tiles t (word::acc) in 
+      List.filter (fun x -> if List.length x <> 1 then true else false) new_words
+    end
+
+(** [new_words beg_state end_state] are all of the new words (in tile list form) 
+    from tiles that are placed in [end_state] from [beg_state]*)
+let new_words beg_state end_state =
   let beg_board_tiles = occupied_grids beg_state.board.cells [] in 
   let end_board_tiles = occupied_grids end_state.board.cells [] in 
   let new_tiles = List.rev (list_diff beg_board_tiles end_board_tiles []) in
@@ -639,22 +695,36 @@ let primary_word beg_state end_state =
       let x_list = (List.sort compare (fst (List.split new_grids))) in 
       let x_words = 
         entire_word_in_row beg_board_tiles x_list first_y new_tiles in 
-      if (List.length x_words) > (List.length y_words) then x_words else y_words
+      if (List.length x_words) > (List.length y_words) then
+        begin
+          let primary_word = x_words in 
+          let secondary_words = horizontal_secondary_words beg_board_tiles new_tiles [] in 
+          primary_word::secondary_words
+        end
+      else
+        begin
+          let primary_word = y_words in 
+          let secondary_words = vertical_secondary_words beg_board_tiles new_tiles [] in 
+          primary_word::secondary_words
+        end
     end
   else
     (* checking if visually in same column *)
   if (in_same_row new_tiles first_y) then 
     begin
       let x_list = (List.sort compare (fst (List.split new_grids)))  in 
-      entire_word_in_row beg_board_tiles x_list first_y new_tiles
+      let primary_word = entire_word_in_row beg_board_tiles x_list first_y new_tiles in 
+      let secondary_words = horizontal_secondary_words beg_board_tiles new_tiles [] in 
+      primary_word::secondary_words
     end
     (* f visually in same row *)
   else   
     begin
       let y_list = (List.sort compare (snd (List.split new_grids))) in
-      entire_word_in_col beg_board_tiles y_list first_x new_tiles
+      let primary_word = entire_word_in_col beg_board_tiles y_list first_x new_tiles in
+      let secondary_words = vertical_secondary_words beg_board_tiles new_tiles [] in 
+      primary_word::secondary_words
     end
-
 
 (** [play cell tile_letter state] if the state when tile with [tile_letter] is 
     put in [cell] given current state [state] *)
