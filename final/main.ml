@@ -66,7 +66,9 @@ let rec play_game start_of_turn_game current_game player =
       play_game start_of_turn_game current_game player
 
     | Check -> 
-      check_helper start_of_turn_game current_game player
+      begin
+        check_helper start_of_turn_game current_game player
+      end
     |_ -> failwith ""
   with _ -> 
     print_endline("");
@@ -78,6 +80,8 @@ and check_helper start_of_turn_game current_game player =
   if Scrabble.check_if_valid start_of_turn_game current_game then (
     print_endline("");
     print_string "Other player please confirm words";
+    print_endline("");
+    Scrabble.print_words start_of_turn_game current_game;
     print_endline("");
     match Command.parse (read_line ()) with
     | Valid -> if (player = Scrabble.Player1 (Scrabble.get_init_player1 ()))

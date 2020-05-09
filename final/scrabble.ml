@@ -559,6 +559,32 @@ let rec tiles_in_col_right beg_board_tiles largest_x_coord y_loc acc =
     end
   else acc
 
+(** [tiles_in_col_middle beg_board_tiles y_list x_loc acc] is all the tiles in
+    boead [beg_board_tiles] with y coordinate in [y_list] and x coordinate 
+    [x_loc] *)
+let rec tiles_in_col_middle beg_board_tiles y_list x_loc acc = 
+  match y_list with 
+  | [] -> List.rev acc
+  | h::t -> 
+    begin
+      let tile_in_board = 
+        tile_with_loc beg_board_tiles (x_loc, (List.nth y_list 0)) in 
+      tiles_in_col_middle beg_board_tiles t x_loc (tile_in_board::acc)
+    end
+
+(** [tiles_in_row_middle beg_board_tiles x_list y_loc acc] is all the tiles in
+    boead [beg_board_tiles] with x coordinate in [x_list] and y coordinate 
+    [x_loc] *)
+let rec tiles_in_row_middle beg_board_tiles x_list y_loc acc = 
+  match x_list with 
+  | [] -> List.rev acc
+  | h::t -> 
+    begin
+      let tile_in_board = 
+        tile_with_loc beg_board_tiles (h,y_loc) in 
+      tiles_in_row_middle beg_board_tiles t y_loc (tile_in_board::acc)
+    end
+
 (** [entire_word_in_col beg_board_tiles y_list x_loc new_tiles] tiles of all 
     tiles in word in column *)
 let entire_word_in_col beg_board_tiles y_list x_loc new_tiles =
@@ -570,7 +596,9 @@ let entire_word_in_col beg_board_tiles y_list x_loc new_tiles =
     tiles_in_row_above beg_board_tiles smallest_y_coord x_loc [] in
   let tiles_below = 
     tiles_in_row_below beg_board_tiles largest_y_coord x_loc [] in
-  let all_tiles_in_word = tiles_above@new_tiles@tiles_below in
+  let tiles_in_middle = 
+    tiles_in_col_middle (List.append beg_board_tiles new_tiles) y_list x_loc [] in
+  let all_tiles_in_word = tiles_above@tiles_in_middle@tiles_below in
   all_tiles_in_word
 
 (** [entire_word_in_col beg_board_tiles x_list y_loc new_tiles] tiles of all 
@@ -584,7 +612,9 @@ let entire_word_in_row beg_board_tiles x_list y_loc new_tiles =
     tiles_in_col_left beg_board_tiles smallest_x_coord y_loc [] in
   let tiles_right = 
     tiles_in_col_right beg_board_tiles largest_x_coord y_loc [] in
-  let all_tiles_in_word = tiles_left@new_tiles@tiles_right in
+  let tiles_in_middle = 
+    tiles_in_row_middle (List.append beg_board_tiles new_tiles) x_list y_loc [] in
+  let all_tiles_in_word = tiles_left@tiles_in_middle@tiles_right in
   all_tiles_in_word
 
 (** [in_same_row tile_grid_list x] is true if all tiles in [tile_grid_list] s
@@ -627,6 +657,7 @@ let find_horiz_word beg_board_tiles new_tile acc =
     | Board (x,y) -> x
     | _ -> failwith "tile not on the board" in 
   entire_word_in_col beg_board_tiles [y_coord] x_coord [new_tile]
+(* entire_word_in_row beg_board_tiles [x_coord] y_coord [new_tile] *)
 
 (** [find_vert_word beg_board_tiles new_tile acc] the vertical word in 
     [beg_board_tiles] to tile [new_tile] *)
@@ -640,6 +671,7 @@ let find_vert_word beg_board_tiles new_tile acc =
     | Board (x,y) -> x
     | _ -> failwith "tile not on the board" in 
   entire_word_in_row beg_board_tiles [x_coord] y_coord [new_tile]
+(* entire_word_in_col beg_board_tiles [y_coord] x_coord [new_tile] *)
 
 (* gets the secondary words (that are horizontal) when new tiles are visually 
    in a COL *)
@@ -726,6 +758,26 @@ let new_words beg_state end_state =
       primary_word::secondary_words
     end
 
+(** [word_tiles_string tile_list acc] the word formed by tiles in [tile_list] *)
+let rec word_tiles_string tile_list acc = 
+  match tile_list with 
+  | [] -> acc
+  | tile::t -> word_tiles_string t (acc ^ (Char.escaped tile.letter))
+
+(** [list_list_tiles_string tile_list_list acc] string of all words formed in 
+    the list of list of tiles [tile_list_list] *)
+let rec list_list_tiles_string tile_list_list acc = 
+  match tile_list_list with 
+  | [] -> String.sub acc 2 ((String.length acc) - 2)
+  | tile_lst::t ->
+    list_list_tiles_string t (", " ^ (word_tiles_string tile_lst "") ^ acc)
+
+(** [print_words new_words beg_state end_state] prints all new words made from
+    [beg_state] to [end_state] *)
+let print_words beg_state end_state = 
+  let all_new_words = new_words beg_state end_state in 
+  print_endline(list_list_tiles_string all_new_words "")
+
 (** [play cell tile_letter state] if the state when tile with [tile_letter] is 
     put in [cell] given current state [state] *)
 let play cell tile_letter state player = 
@@ -751,7 +803,7 @@ let play cell tile_letter state player =
         else (print_endline("Tile is not available in your hand"); 
               raise Invalid_Play))
 
-
+(** [delete cell state player] removes tile in [cell] from board in [state] *) 
 let delete cell state player = 
   if (occupied_cell cell state.board) 
   then (
