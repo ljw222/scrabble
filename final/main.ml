@@ -7,11 +7,11 @@ open State
 
 (* LATER: *)
 (* points *)
-(* fucntion that returns all of the new words made *)
 (* checking when game is won *)
 (* score function / display score *)
 (* bonus points tile*)
 (* if no words can be made, switch to new hand tiles -> if no words can be made then switch entire hand *)
+(* print tiles in different color (when placing during turn) *)
 
 (* BUGS *)
 (* you can remove any tile, not just ones placed in your turn *)
@@ -22,14 +22,12 @@ open State
 (* once done command is executed, should check if the tiles make correct 
    words/are connected to existing words --> if not then remove all tiles 
    from that turn*)
-(* fucntion that returns all of the new words made *)
-(* switching players *)
 
 let rec play_game start_of_turn_game current_game player =
   print_endline("");
   Scrabble.print_board current_game.board;
   print_endline("");
-  Scrabble.print_hand player current_game;
+  Scrabble.print_hand (State.player_turn player) current_game;
   print_endline("");
   print_string("Enter 'cell (_,_)' to pick a cell to play");
   print_endline("");
@@ -44,13 +42,13 @@ let rec play_game start_of_turn_game current_game player =
           let first = (Char.code (String.get (List.nth c 0) 1)) - 48 in 
           let second = (Char.code (String.get (List.nth c 0) 3)) - 48 in 
           let new_game_state = 
-            Scrabble.play (first,second) (String.get (List.nth t 0) 0) current_game player 
+            Scrabble.play (first,second) (String.get (List.nth t 0) 0) current_game (State.player_turn player) 
           in
           play_game start_of_turn_game new_game_state player
         | Remove -> 
           let first = (Char.code (String.get (List.nth c 0) 1)) - 48 in 
           let second = (Char.code (String.get (List.nth c 0) 3)) - 48 in 
-          let new_game_state = Scrabble.delete (first,second) current_game player in 
+          let new_game_state = Scrabble.delete (first,second) current_game (State.player_turn player) in 
           play_game start_of_turn_game new_game_state player
         | Quit -> print_endline "Thanks for playing!"
         | _ -> 
@@ -77,20 +75,41 @@ let rec play_game start_of_turn_game current_game player =
     play_game start_of_turn_game current_game player
 
 and check_helper start_of_turn_game current_game player =
+  let current_player = (State.player_turn player) in
+  let current_player_type = match current_player with 
+    | Player1 _ -> "player1"
+    | Player2 _ -> "player2" in
   if Scrabble.check_if_valid start_of_turn_game current_game then (
     print_endline("");
     print_string "Other player please confirm words";
     print_endline("");
     Scrabble.print_words start_of_turn_game current_game;
     print_endline("");
+    let new_score = 
+      Scrabble.points_of_turn start_of_turn_game current_game in
     match Command.parse (read_line ()) with
-    | Valid -> if (player = Scrabble.Player1 (Scrabble.get_init_player1 ()))
-      then (print_endline("");print_endline("Switch player!");
-            play_game current_game (Scrabble.refill_hand current_game player) 
-              (Scrabble.Player2 (Scrabble.get_init_player2 ())))
-      else (print_endline("");print_endline("Switch player!");
-            play_game current_game (Scrabble.refill_hand current_game player) 
-              (Scrabble.Player1 (Scrabble.get_init_player1 ())))
+    | Valid -> 
+      if (current_player_type = "player1")
+      then 
+        begin
+          print_endline("");
+          print_endline("Switch player!");
+          let new_player1 = Scrabble.update_player "player1" new_score in 
+          let new_state = State.update_player1 player new_score new_player1 in
+          print_endline(Int.to_string (State.get_player_score "player1" player));
+          play_game current_game 
+            (Scrabble.refill_hand current_game current_player) new_state
+        end
+      else 
+        begin 
+          print_endline("");
+          print_endline("Switch player!");
+          let new_player2 = Scrabble.update_player "player2" new_score in 
+          let new_state = State.update_player2 player new_score new_player2 in
+          print_endline(Int.to_string (State.get_player_score "player1" player));
+          play_game current_game (Scrabble.refill_hand current_game current_player) 
+            new_state
+        end
     | Invalid -> print_endline("word not valid");
       play_game start_of_turn_game current_game player
     | Quit -> print_endline "Thanks for playing!"
@@ -120,8 +139,8 @@ let rec main () =
   print_string  "> ";
   match read_line () with
   | "start" -> 
-    play_game (Scrabble.get_init_state ()) (Scrabble.get_init_state ()) 
-      (State.player_turn (State.get_init_state ()))
+    play_game (Scrabble.get_init_state ()) (Scrabble.get_init_state ()) (State.get_init_state ())
+  (* (State.player_turn (State.get_init_state ())) *)
   | _ -> main ()
 
 (* Execute the game engine. *)

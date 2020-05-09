@@ -24,3 +24,9 @@ type game_state =
 val get_init_state: unit -> t
 
 val player_turn: t -> Scrabble.players
+
+val update_player1: t -> 'a -> Scrabble.players -> t
+
+val update_player2: t -> 'a -> Scrabble.players -> t
+
+val get_player_score: string -> t -> int

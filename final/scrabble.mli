@@ -74,3 +74,9 @@ val check_if_valid: t -> t -> bool
 val delete: grid -> t -> players -> t
 
 val print_words: t -> t -> unit
+
+val points_of_turn: t -> t -> int
+
+val update_player: string -> int -> players
+
+val player_score: players -> string -> int
