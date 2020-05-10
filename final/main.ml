@@ -87,7 +87,7 @@ let rec play_game start_of_turn_game current_game player =
           (Scrabble.Player2 (Scrabble.get_init_player2 ()))
       else play_game start_of_turn_game current_game
           (Scrabble.Player1 (Scrabble.get_init_player1 ()))
-    |_ -> failwith ""
+    | _ -> failwith ""
   with _ -> 
     print_endline("");
     print_string "This is not a valid command. Try again";
@@ -102,10 +102,6 @@ and check_helper start_of_turn_game current_game player =
   let current_score2 = Scrabble.return_current_score2 player_type current_game in
   let turn_score = Scrabble.points_of_turn start_of_turn_game current_game in
   let new_score = current_score2 + turn_score in
-  let player_type = 
-    match player with
-    | Player1 _ -> "player1"
-    | Player2 _ -> "player2" in 
   if Scrabble.check_if_valid start_of_turn_game current_game then (
     print_endline("");
     print_string "Other player please confirm words";
@@ -122,22 +118,12 @@ and check_helper start_of_turn_game current_game player =
         end
       else if (player_type = "player1")
       then (
-        (* stores the current score of player 1 *)
-        (* let current_score = Scrabble.return_current_score player in *)
-        (* let current_score = Scrabble.return_current_score2 player_type current_game in
-           let turn_score = Scrabble.points_of_turn start_of_turn_game current_game in
-           let new_score = current_score + turn_score in *)
-        (* let new_players = Scrabble.update_player "player1" new_score in *)
         print_endline("");
         print_endline("Switch player!");
         play_game current_game (Scrabble.refill_hand current_game player new_score) 
           (Scrabble.Player2 (Scrabble.get_init_player2 ())))
       else (
-        (* let current_score = Scrabble.return_current_score player in *)
-        (* let current_score = Scrabble.return_current_score2 player_type current_game in
-           let turn_score = Scrabble.points_of_turn start_of_turn_game current_game in
-           let new_score = current_score + turn_score in *)
-        (* let new_players = Scrabble.update_player "player2" new_score in *)
+        print_endline("111");
         print_endline("");
         print_endline("Switch player!");
         play_game current_game (Scrabble.refill_hand current_game player new_score) 
