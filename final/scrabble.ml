@@ -75,6 +75,41 @@ let rec location_tile tiles location acc =
     if h.location = location then location_tile t location (h::acc) else 
       location_tile t location acc
 
+(** [tiles_in_player_hand tiles player_type acc] is the list of tiles from
+    [tiles] that are located in [player_type hand]*)
+let rec tiles_in_player_hand tiles player_type acc =
+  match tiles with
+  | [] -> List.rev acc
+  | h::t -> 
+    begin
+      let tile_loc = 
+        match h.location with
+        | Hand (Player1 _) -> "player1"
+        | Hand (Player2 _) -> "player2"
+        | _ -> "" in 
+      if tile_loc = player_type then tiles_in_player_hand t player_type (h::acc) 
+      else tiles_in_player_hand t player_type acc
+    end
+
+(** [char_in_collection collection char] is true if a tile with the letter 
+    [char] is in tile collection [collection]. otherwise false *)
+let rec char_in_collection collection char = 
+  match collection with
+  | [] -> false
+  | h::t -> if h.letter = char then true else char_in_collection t char
+
+(** [get_player_type player] is the player type of [player] *)
+let get_player_type player = 
+  match player with 
+  | Player1 _ -> "player1"
+  | Player2 _ -> "player2"
+
+(** [valid_tile_in_hand tile_letter all_tiles player] is true if [tile] is 
+    available in the hand of [player]. Otherwise false *)
+let valid_tile_in_hand tile_letter all_tiles player =
+  let tiles_in_hand = tiles_in_player_hand all_tiles (get_player_type player) [] in
+  char_in_collection tiles_in_hand tile_letter 
+
 (** [choose_tile tiles player num_tiles] all tiles in [tiles] with a random 
     tile location hanged to be in the hand of [player] [num_tiles] times *)
 let rec choose_tile tiles player num_tiles =
@@ -131,7 +166,7 @@ let init_board = {
 let init_state = {
   all_tiles = init_tiles_player2;
   board = init_board;
-  players = [Player1 init_player1;Player2 init_player2];
+  players = [Player1 init_player1; Player2 init_player2];
 }
 
 (** [valid_cell cell board] is true if the [cell] is valid/availible [board] *)
@@ -152,24 +187,11 @@ let occupied_cell cell board =
     | Some t -> true
     | None -> false
 
-(** [char_in_collection collection char] is true if a tile with the letter 
-    [char] is in tile collection [collection]. otherwise false *)
-let rec char_in_collection collection char = 
-  match collection with
-  | [] -> false
-  | h::t -> if h.letter = char then true else char_in_collection t char
-
 (** [valid_tile tile all_tiles] is true if [tile] is available in the bag of 
     [all_tiles]. Otherwise false *)
 let valid_tile tile_letter all_tiles =
   let bag_tiles = location_tile all_tiles Bag [] in
   char_in_collection bag_tiles tile_letter 
-
-(** [valid_tile_in_hand tile_letter all_tiles player] is true if [tile] is 
-    available in the hand of [player]. Otherwise false *)
-let valid_tile_in_hand tile_letter all_tiles player =
-  let tiles_in_hand = location_tile all_tiles (Hand player) [] in
-  char_in_collection tiles_in_hand tile_letter 
 
 let init_state = {
   all_tiles = init_tiles_player2;
@@ -178,7 +200,7 @@ let init_state = {
 }
 
 (** [update_tile_loc tile_letter all_tiles cell acc] updates [all_tiles] with 
-    the tile in the bag with letter [tile_letter] to be in the board *)
+    the tile in the bag with letter [tile_letter] to be on the board *)
 let rec update_tile_loc tile_letter all_tiles cell acc =
   match all_tiles with
   | [] -> acc
@@ -323,17 +345,53 @@ let rec string_of_tiles hand_tiles =
 
 (** [print_hand player game_state] prints the hand of [player] *)
 let print_hand player game_state =
-  let hand_tiles = location_tile game_state.all_tiles (Hand player) [] in
+  let player_type = get_player_type player in 
+  let hand_tiles = tiles_in_player_hand game_state.all_tiles player_type [] in
   print_string ("Hand:  [ " ^ (string_of_tiles hand_tiles) ^ "]")
+
+(** [update_tiles_with_score tiles player_type new_score acc] is [tiles] where 
+    tiles in hand of [player_type] update the score of the player*)
+let rec update_tiles_with_score tiles player_type new_score acc = 
+  match tiles with 
+  | [] -> List.rev acc
+  | h::t -> 
+    begin
+      let tile_player_type = 
+        match h.location with 
+        | Hand (Player1 _) -> "player1"
+        | Hand (Player2 _) -> "player2" 
+        | _ -> "" in 
+      if tile_player_type = player_type then 
+        begin
+          let new_player = 
+            if player_type = "player1" then Player1 {score = new_score}
+            else Player2 {score = new_score} in
+          let new_tile = 
+            {id=h.id; letter=h.letter; point=h.point; location = 
+                                                        Hand (new_player)} in 
+          update_tiles_with_score t player_type new_score (new_tile::acc)
+        end
+      else update_tiles_with_score t player_type new_score (h::acc)
+    end
 
 (** [refill_hand state player] refills hand of [player] to 7 tiles after turn is
     a valid check *)
 let refill_hand state player = 
-  let tiles_in_hand = location_tile state.all_tiles (Hand player) [] in 
+  let player_type = 
+    match player with 
+    | Player1 _ -> "player1"
+    | Player2 _ -> "player2" in
+  let player_score = 
+    match player with 
+    | Player1 p -> p.score
+    | Player2 p -> p.score in
+  let tiles_in_hand = tiles_in_player_hand state.all_tiles player_type [] in 
   let num_to_refill = 7 - (List.length tiles_in_hand) in 
-  let updated_tiles = choose_tile state.all_tiles player num_to_refill in 
+  let updated_tiles1 = choose_tile state.all_tiles player num_to_refill in 
+  let updated_tiles2 = 
+    update_tiles_with_score updated_tiles1 player_type player_score [] in
   {
-    all_tiles = updated_tiles;
+    all_tiles = updated_tiles2;
     board = state.board;
     players = state.players;
   }
@@ -455,12 +513,18 @@ let helper_col y_lst beg_cells x =
     (* case where original tiles are dispursed inbetween new word formed *)
   else col_check_if_gaps_filled beg_cells y_lst x ordered_y
 
+let rec print_tile_letters tiles acc = 
+  match tiles with 
+  | [] -> acc
+  | h::t -> print_tile_letters t (Char.escaped h.letter)^" "^acc
+
 (** [check_if_valid beg_state end_state] is true if all tiles on board in new 
     [beg_state] state are valid in comparison to new state [end_state] *)
 let check_if_valid beg_state end_state =
   let beg_board_tiles = occupied_grids beg_state.board.cells [] in 
   let end_board_tiles = occupied_grids end_state.board.cells [] in 
   let new_tiles = list_diff beg_board_tiles end_board_tiles [] in
+  print_string (print_tile_letters new_tiles "");
   (* first x coordinate in list of new tiles *)
   let first_x =
     match (List.nth new_tiles 0).location with 

@@ -22,15 +22,27 @@ open State
 (* once done command is executed, should check if the tiles make correct 
    words/are connected to existing words --> if not then remove all tiles 
    from that turn*)
-
-let rec play_game start_of_turn_game current_game player =
+let basic_info start_of_turn_game current_game player = 
+  let current_player = State.player_turn player in 
+  let player_type = 
+    match current_player with
+    | Player1 _ -> "player1"
+    | Player2 _ -> "player2" in 
+  print_endline("Current Player: " ^ player_type);
+  let player_score = Int.to_string (State.get_player_score player_type player) in
+  print_endline("Score as of last turn:" ^ player_score);
   print_endline("");
   Scrabble.print_board current_game.board;
   print_endline("");
-  Scrabble.print_hand (State.player_turn player) current_game;
+  Scrabble.print_hand current_player current_game;
   print_endline("");
   print_string("Enter 'cell (_,_)' to pick a cell to play");
-  print_endline("");
+  print_endline("")
+
+let rec play_game start_of_turn_game current_game player =
+  print_endline("_____________________________");
+  let current_player = State.player_turn player in 
+  basic_info start_of_turn_game current_game player;
   try 
     match Command.parse (read_line ()) with
     | Cell c -> 
@@ -41,14 +53,16 @@ let rec play_game start_of_turn_game current_game player =
         | Tile t -> 
           let first = (Char.code (String.get (List.nth c 0) 1)) - 48 in 
           let second = (Char.code (String.get (List.nth c 0) 3)) - 48 in 
+          print_endline("line 56");
           let new_game_state = 
-            Scrabble.play (first,second) (String.get (List.nth t 0) 0) current_game (State.player_turn player) 
+            Scrabble.play (first,second) (String.get (List.nth t 0) 0) current_game current_player 
           in
           play_game start_of_turn_game new_game_state player
         | Remove -> 
           let first = (Char.code (String.get (List.nth c 0) 1)) - 48 in 
           let second = (Char.code (String.get (List.nth c 0) 3)) - 48 in 
-          let new_game_state = Scrabble.delete (first,second) current_game (State.player_turn player) in 
+          print_endline("line 64");
+          let new_game_state = Scrabble.delete (first,second) current_game current_player in 
           play_game start_of_turn_game new_game_state player
         | Quit -> print_endline "Thanks for playing!"
         | _ -> 
@@ -62,7 +76,6 @@ let rec play_game start_of_turn_game current_game player =
       print_string "You must enter a cell location first. Try again";
       print_endline("");
       play_game start_of_turn_game current_game player
-
     | Check -> 
       begin
         check_helper start_of_turn_game current_game player
@@ -95,19 +108,17 @@ and check_helper start_of_turn_game current_game player =
           print_endline("");
           print_endline("Switch player!");
           let new_player1 = Scrabble.update_player "player1" new_score in 
-          let new_state = State.update_player1 player new_score new_player1 in
-          print_endline(Int.to_string (State.get_player_score "player1" player));
+          let new_state = State.update_player1 player new_player1 in
           play_game current_game 
-            (Scrabble.refill_hand current_game current_player) new_state
+            (Scrabble.refill_hand current_game new_player1) new_state
         end
       else 
         begin 
           print_endline("");
           print_endline("Switch player!");
           let new_player2 = Scrabble.update_player "player2" new_score in 
-          let new_state = State.update_player2 player new_score new_player2 in
-          print_endline(Int.to_string (State.get_player_score "player1" player));
-          play_game current_game (Scrabble.refill_hand current_game current_player) 
+          let new_state = State.update_player2 player new_player2 in
+          play_game current_game (Scrabble.refill_hand current_game new_player2) 
             new_state
         end
     | Invalid -> print_endline("word not valid");
