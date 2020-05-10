@@ -2,6 +2,8 @@ open Scrabble
 
 type object_phrase = string list
 type command = 
+  (* | Cell of Scrabble.grid
+     | Tile of Scrabble.tile *)
   | Cell of object_phrase
   | Tile of object_phrase
   | Remove
@@ -9,6 +11,7 @@ type command =
   | Valid
   | Invalid
   | Quit
+  | Stuck
 
 (* Cell (1,1)
    have function that determines if cell is avail on board
@@ -56,4 +59,5 @@ let parse str =
       else if h = "valid" && (List.length t = 0) then Valid
       else if h = "invalid" && (List.length t = 0) then Invalid
       else if h = "quit" && (List.length t = 0) then Quit
+      else if h = "stuck" && (List.length t = 0) then Stuck
       else raise Malformed
