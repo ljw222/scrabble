@@ -822,6 +822,46 @@ let print_words beg_state end_state =
   let all_new_words = new_words beg_state end_state in 
   print_endline(list_list_tiles_string all_new_words "")
 
+let rec location_lst (new_tiles: tile list) acc : location_id list= 
+  match new_tiles with
+  | h::t-> location_lst t (h.location::acc)
+  | [] -> acc
+
+let rec grid_lst (loc_lst: location_id list) acc : grid list = 
+  match loc_lst with
+  | (Board grid )::t -> grid_lst t (grid::acc)
+  | _ :: t-> grid_lst t acc
+  | [] -> acc
+
+(** [delete cell state player] removes tile in [cell] from board in [state] *) 
+let delete cell state player beg_state end_state = 
+  let beg_board_tiles = occupied_grids beg_state.board.cells [] in 
+  let end_board_tiles = occupied_grids end_state.board.cells [] in 
+  let new_tiles = list_diff beg_board_tiles end_board_tiles [] in
+  let new_loc = location_lst new_tiles [] in
+  let new_grid = grid_lst new_loc [] in
+
+  if ((occupied_cell cell state.board) && (List.mem cell new_grid))
+  then (
+    (* let tile_at_grid = location_tile state.all_tiles (Board cell) [] in  *)
+    (* let update_tile = return_tile_to_hand cell tile_at_grid player in  *)
+    let update_board = 
+      {
+        cells = rem_board_cells state.board.cells cell [];
+        point_bonus=state.board.point_bonus;
+      } in
+    let updated_tiles = tile_board_to_hand state.all_tiles cell [] player in 
+    {
+      all_tiles = updated_tiles;
+      board = update_board;
+      players = state.players;
+    }
+  )
+  else (if (not (valid_cell cell state.board)) then 
+          (print_endline("Cell is not available"); raise Invalid_Play)
+        else (print_endline("Tile is not available in selected cell"); 
+              raise Invalid_Play))
+
 (** [play cell tile_letter state] if the state when tile with [tile_letter] is 
     put in [cell] given current state [state] *)
 let play cell tile_letter state player = 
@@ -847,29 +887,6 @@ let play cell tile_letter state player =
   else (if (not (valid_cell cell state.board)) then 
           (print_endline("Cell is not available"); raise Invalid_Play)
         else (print_endline("Tile is not available in your hand"); 
-              raise Invalid_Play))
-
-(** [delete cell state player] removes tile in [cell] from board in [state] *) 
-let delete cell state player = 
-  if (occupied_cell cell state.board) 
-  then (
-    (* let tile_at_grid = location_tile state.all_tiles (Board cell) [] in  *)
-    (* let update_tile = return_tile_to_hand cell tile_at_grid player in  *)
-    let update_board = 
-      {
-        cells = rem_board_cells state.board.cells cell [];
-        point_bonus=state.board.point_bonus;
-      } in
-    let updated_tiles = tile_board_to_hand state.all_tiles cell [] player in 
-    {
-      all_tiles = updated_tiles;
-      board = update_board;
-      players = state.players;
-    }
-  )
-  else (if (not (valid_cell cell state.board)) then 
-          (print_endline("Cell is not available"); raise Invalid_Play)
-        else (print_endline("Tile is not available in selected cell"); 
               raise Invalid_Play))
 
 let return_current_score player = 

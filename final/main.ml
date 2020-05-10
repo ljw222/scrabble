@@ -55,8 +55,11 @@ and cell_helper start_of_turn_game current_game player c =
       play_game start_of_turn_game new_game_state player
     | Remove -> 
       let new_game_state = 
-        Scrabble.delete (first,second) current_game player in 
+        Scrabble.delete (first,second) current_game player start_of_turn_game 
+          current_game in 
       play_game start_of_turn_game new_game_state player
+
+
     | Quit -> print_endline "Thanks for playing!"
     | _ -> 
       ANSITerminal.(print_string [red]
