@@ -1,4 +1,3 @@
-(* open Scrabble *)
 type game_state = 
   | Ongoing
   | Done
@@ -11,7 +10,7 @@ type t = {
 }
 
 let init_state = {
-  winning_score = 5;
+  winning_score = 50;
   state = Ongoing;
   player_turn = Scrabble.Player1 (Scrabble.get_init_player1 ());
   player1 = Scrabble.Player1 (Scrabble.get_init_player1 ());
@@ -55,3 +54,12 @@ let get_player_score player_type state =
 
 let winning_score state = 
   state.winning_score
+
+let get_other_player_score state = 
+  let current_player = state.player_turn in 
+  let opp_player_type = 
+    match current_player with 
+    | Player1 _ -> "player2"
+    | Player2 _ -> "player1" in 
+  if opp_player_type = "player2" then get_player_score "player2" state 
+  else get_player_score "player3" state

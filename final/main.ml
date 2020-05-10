@@ -2,25 +2,6 @@ open Scrabble
 open Command
 open State
 
-(** [basic_info start_of_turn_game current_game player] prints the basic 
-    information at the start of every move *)
-let basic_info start_of_turn_game current_game player = 
-  let current_player = State.player_turn player in 
-  let player_type = 
-    match current_player with
-    | Player1 _ -> "player1"
-    | Player2 _ -> "player2" in 
-  print_endline("Current Player: " ^ player_type);
-  let player_score = Int.to_string (State.get_player_score player_type player) in
-  print_endline("Score as of beginning of turn:" ^ player_score);
-  print_endline("");
-  Scrabble.print_board current_game.board;
-  print_endline("");
-  Scrabble.print_hand current_player current_game;
-  print_endline("");
-  print_string("Enter 'cell (_,_)' to pick a cell to play");
-  print_endline("")
-
 let rec play_game start_of_turn_game current_game player =
   print_endline("________________________________");
   let current_player = State.player_turn player in 
@@ -40,10 +21,27 @@ let rec play_game start_of_turn_game current_game player =
       end
     |_ -> failwith ""
   with _ -> 
-    print_endline("");
-    print_string "This is not a valid command. Try again";
-    print_endline("");
+    ANSITerminal.(print_string [red]
+                    "\nThis is not a valid command. Try again\n");
     play_game start_of_turn_game current_game player
+
+(** [basic_info start_of_turn_game current_game player] prints the basic 
+    information at the start of every move *)
+and basic_info start_of_turn_game current_game player = 
+  let current_player = State.player_turn player in 
+  let player_type = 
+    match current_player with
+    | Player1 _ -> "player1"
+    | Player2 _ -> "player2" in 
+  print_endline("Current Player: " ^ player_type);
+  let player_score = Int.to_string (State.get_player_score player_type player) in
+  print_endline("Score as of beginning of turn:" ^ player_score);
+  print_endline("");
+  Scrabble.print_board current_game.board;
+  print_endline("");
+  Scrabble.print_hand current_player current_game;
+  ANSITerminal.(print_string [blue]
+                  "\nEnter 'cell (_,_)' to pick a cell to play\n");
 
 and play_cell_command start_of_turn_game current_game player current_player c = 
   begin
@@ -67,9 +65,8 @@ and play_cell_command start_of_turn_game current_game player current_player c =
         exit 0
       end
     | _ -> 
-      print_endline("");
-      print_string "Please enter a tile command. Try again";
-      print_endline("");
+      ANSITerminal.(print_string [red]
+                      "\nPlease enter a tile command. Try again\n");
       play_game start_of_turn_game current_game player
   end
 
@@ -131,27 +128,27 @@ let rec main () =
   ANSITerminal.(print_string [black]
                   "\n1. Place a tile on the board \n");
   ANSITerminal.(print_string [green]
-                  "\ncell (1,0)\n");
+                  "cell (1,0)\n");
   ANSITerminal.(print_string [green]
-                  "\ntile A\n");
+                  "tile A\n");
   ANSITerminal.(print_string [black]
-                  "\n2. Remove a tile from the board\n");
+                  "2. Remove a tile from the board\n");
   ANSITerminal.(print_string [green]
-                  "\ncell (1,0)\n");
+                  "cell (1,0)\n");
   ANSITerminal.(print_string [green]
-                  "\nremove\n");
+                  "remove\n");
   ANSITerminal.(print_string [black]
-                  "\n3. Finish your turn by asking the other player to validate your input\n");
+                  "3. Finish your turn by asking the other player to validate your input\n");
   ANSITerminal.(print_string [green]
-                  "\ncheck\n");   
+                  "check\n");   
   ANSITerminal.(print_string [black]
-                  "\n4. When checking the words made of another player\n");
+                  "4. When checking the words made of another player\n");
   ANSITerminal.(print_string [green]
-                  "\nvalid or invalid\n");
+                  "valid or invalid\n");
   ANSITerminal.(print_string [black]
-                  "\n5. Quit the game anytime with command\n");
+                  "5. Quit the game anytime with command\n");
   ANSITerminal.(print_string [green]
-                  "\nquit\n");
+                  "quit\n");
   ANSITerminal.(print_string [blue]
                   "\nType 'start' to begin!\n");
   print_string  "> ";

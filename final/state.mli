@@ -32,3 +32,5 @@ val update_player2: t -> Scrabble.players -> t
 val get_player_score: string -> t -> int
 
 val winning_score: t -> int
+
+val get_other_player_score: t -> int

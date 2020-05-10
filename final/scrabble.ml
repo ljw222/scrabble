@@ -130,7 +130,7 @@ let init_tiles_player1 =
   choose_tile all_tiles (Player1 init_player1) 8
 (* deal 7 tiles to player2 *)
 let init_tiles_player2 = 
-  choose_tile init_tiles_player1 (Player2 init_player1) 8
+  choose_tile init_tiles_player1 (Player2 init_player1) 7
 
 let rec create_init_board acc x y = 
   match x,y with
@@ -377,21 +377,11 @@ let rec update_tiles_with_score tiles player_type new_score acc =
 (** [refill_hand state player] refills hand of [player] to 7 tiles after turn is
     a valid check *)
 let refill_hand state player = 
-  let player_type = 
-    match player with 
-    | Player1 _ -> "player1"
-    | Player2 _ -> "player2" in
-  let player_score = 
-    match player with 
-    | Player1 p -> p.score
-    | Player2 p -> p.score in
-  let tiles_in_hand = tiles_in_player_hand state.all_tiles player_type [] in 
+  let tiles_in_hand = location_tile state.all_tiles (Hand player) [] in 
   let num_to_refill = 7 - (List.length tiles_in_hand) in 
-  let updated_tiles1 = choose_tile state.all_tiles player num_to_refill in 
-  let updated_tiles2 = 
-    update_tiles_with_score updated_tiles1 player_type player_score [] in
+  let updated_tiles = choose_tile state.all_tiles player num_to_refill in 
   {
-    all_tiles = updated_tiles2;
+    all_tiles = updated_tiles;
     board = state.board;
     players = state.players;
   }
