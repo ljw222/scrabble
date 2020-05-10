@@ -302,7 +302,7 @@ let rec print_board board_cells acc x y =
   if acc mod 10 = 0 then print_endline("");
   if x = 0 && y <> 10 then print_string(Int.to_string y);
   match board_cells with
-  | [] -> print_string " ";
+  | [] -> print_string " "; print_endline("");
   | (grid,contents)::t -> 
     begin
       match contents with
@@ -344,7 +344,10 @@ let rec string_of_tiles hand_tiles =
 let print_hand player game_state =
   let player_type = player_type player in 
   let hand_tiles = tiles_in_player_hand game_state.all_tiles player_type [] in
-  print_string ("Hand:  [ " ^ (string_of_tiles hand_tiles) ^ "]")
+  begin
+    print_string ("Hand:  [ " ^ (string_of_tiles hand_tiles) ^ "]");
+    print_endline("");
+  end
 
 let update_player string score = 
   if string="player1" then (Player1 {score=score}) else (Player2 {score=score})
@@ -585,7 +588,7 @@ let rec tiles_in_row_below beg_board_tiles largest_y_coord x_loc acc =
       let new_tile = tile_with_loc beg_board_tiles (x_loc, largest_y_coord) in
       tiles_in_row_below beg_board_tiles largest_y_coord x_loc (new_tile::acc)
     end
-  else acc
+  else List.rev acc
 
 (** [tiles_in_col_right beg_board_tiles largest_x_coord y_loc acc] is the list 
     of tiles that are in the column to the right/next location 
@@ -597,7 +600,7 @@ let rec tiles_in_col_right beg_board_tiles largest_x_coord y_loc acc =
       let new_tile = tile_with_loc beg_board_tiles (largest_x_coord, y_loc) in
       tiles_in_col_right beg_board_tiles largest_x_coord y_loc (new_tile::acc)
     end
-  else acc
+  else List.rev acc
 
 (** [tiles_in_col_middle beg_board_tiles y_list x_loc acc] is all the tiles in
     boead [beg_board_tiles] with y coordinate in [y_list] and x coordinate 
@@ -952,7 +955,7 @@ let rec update_player2 new_score current_state acc=
   | [] -> print_endline("not in player1");
     failwith "not in player1"
 
-let update_state new_score current_state player= 
+let update_state new_score current_state player = 
   if (player_type player) = "player1" then (
     {
       all_tiles= (update_player1 new_score current_state []);
