@@ -17,7 +17,7 @@ let init_state = {
   player1 = Scrabble.Player1 (Scrabble.get_init_player1 ());
   player2 = Scrabble.Player2 (Scrabble.get_init_player2 ())
 }
-
+player
 let get_init_state () =  
   init_state
 

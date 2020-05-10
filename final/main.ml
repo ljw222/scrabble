@@ -94,6 +94,7 @@ and check_helper start_of_turn_game current_game player =
         begin
           print_endline("");
           print_endline("Switch player!");
+
           let new_player1 = Scrabble.update_player "player1" new_score in 
           let new_state = State.update_player1 player new_score new_player1 in
           print_endline(Int.to_string (State.get_player_score "player1" player));
