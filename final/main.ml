@@ -3,7 +3,7 @@ open Command
 open State
 
 let rec play_game start_of_turn_game current_game player =
-  print_endline("________________________________");
+  print_endline("--------------------------------");
   let current_player = State.player_turn player in 
   basic_info start_of_turn_game current_game player;
   try 
@@ -11,9 +11,8 @@ let rec play_game start_of_turn_game current_game player =
     | Cell c -> 
       play_cell_command start_of_turn_game current_game player current_player c
     | Tile t -> 
-      print_endline("");
-      print_string "You must enter a cell location first. Try again";
-      print_endline("");
+      ANSITerminal.(print_string [red]
+                      "\nYou must enter a cell location first. Try again\n");
       play_game start_of_turn_game current_game player
     | Check -> 
       begin
@@ -51,13 +50,15 @@ and play_cell_command start_of_turn_game current_game player current_player c =
       let first = (Char.code (String.get (List.nth c 0) 1)) - 48 in 
       let second = (Char.code (String.get (List.nth c 0) 3)) - 48 in 
       let new_game_state = 
-        Scrabble.play (first,second) (String.get (List.nth t 0) 0) current_game current_player 
+        Scrabble.play (first,second) (String.get (List.nth t 0) 0) 
+          current_game current_player 
       in
       play_game start_of_turn_game new_game_state player
     | Remove -> 
       let first = (Char.code (String.get (List.nth c 0) 1)) - 48 in 
       let second = (Char.code (String.get (List.nth c 0) 3)) - 48 in 
-      let new_game_state = Scrabble.delete (first,second) current_game current_player in 
+      let new_game_state = Scrabble.delete (first,second) current_game 
+          current_player in 
       play_game start_of_turn_game new_game_state player
     | Quit -> 
       begin
@@ -72,48 +73,50 @@ and play_cell_command start_of_turn_game current_game player current_player c =
 
 and check_helper start_of_turn_game current_game player =
   let current_player = (State.player_turn player) in
-  let current_player_type = match current_player with 
+  let current_player_type = 
+    match current_player with 
     | Player1 _ -> "player1"
     | Player2 _ -> "player2" in
-  if Scrabble.check_if_valid start_of_turn_game current_game then (
-    print_endline("");
-    print_string "Other player please confirm words";
-    print_endline("");
-    Scrabble.print_words start_of_turn_game current_game;
-    print_endline("");
-    let new_score = 
-      Scrabble.points_of_turn start_of_turn_game current_game in
-    match Command.parse (read_line ()) with
-    | Valid -> 
-      if new_score >= State.winning_score player then
-        begin
-          print_endline(current_player_type ^ " won the game! Yay!");
-          exit 0
-        end
-      else if (current_player_type = "player1")
-      then 
-        begin
-          print_endline("");
-          print_endline("Switch player!");
-          let new_player1 = Scrabble.update_player "player1" new_score in 
-          let new_state = State.update_player1 player new_player1 in
-          play_game current_game 
-            (Scrabble.refill_hand current_game new_player1) new_state
-        end
-      else 
-        begin 
-          print_endline("");
-          print_endline("Switch player!");
-          let new_player2 = Scrabble.update_player "player2" new_score in 
-          let new_state = State.update_player2 player new_player2 in
-          play_game current_game (Scrabble.refill_hand current_game new_player2) 
-            new_state
-        end
-    | Invalid -> print_endline("word not valid");
-      play_game start_of_turn_game current_game player
-    | Quit -> print_endline "Thanks for playing!"
-    | _ -> check_helper start_of_turn_game current_game player
-  )
+  if Scrabble.check_if_valid start_of_turn_game current_game then 
+    begin
+      ANSITerminal.(print_string [blue]
+                      "\nOther player please confirm words\n");
+      Scrabble.print_words start_of_turn_game current_game;
+      print_endline("");
+      let new_score = 
+        Scrabble.points_of_turn start_of_turn_game current_game in
+      match Command.parse (read_line ()) with
+      | Valid -> 
+        if new_score >= State.winning_score player then
+          begin
+            print_endline(current_player_type ^ " won the game! Yay!");
+            exit 0
+          end
+        else if (current_player_type = "player1") then 
+          begin
+            ANSITerminal.(print_string [green]
+                            "\nSwitch player!\n");
+            let new_player1 = Scrabble.update_player "player1" new_score in 
+            let new_state = State.update_player1 player new_player1 in
+            play_game current_game 
+              (Scrabble.refill_hand current_game new_player1) new_state
+          end
+        else 
+          begin 
+            ANSITerminal.(print_string [green]
+                            "\nSwitch player!\n");
+            let new_player2 = Scrabble.update_player "player2" new_score in 
+            let new_state = State.update_player2 player new_player2 in
+            play_game current_game 
+              (Scrabble.refill_hand current_game new_player2) new_state
+          end
+      | Invalid -> 
+        ANSITerminal.(print_string [red]
+                        "\nThe other player says that your words aren't valid. Try again\n");
+        play_game start_of_turn_game current_game player
+      | Quit -> print_endline "Thanks for playing!"
+      | _ -> check_helper start_of_turn_game current_game player
+    end
   else (print_endline("");
         print_string "Please enter a valid move. Try again";
         print_endline("");
