@@ -1,5 +1,5 @@
 (* open OUnit2
-   open Adventure
+   open Scrabble
    open Command
    open State
 
@@ -51,6 +51,14 @@
     *)
    ]
 
+
+   let tiles = Scrabble.all_tiles in
+   let location = Scrabble.Hand Player1 {score=0} in 
+
+   let test_location_tile tiles location acc=
+        location_tile tiles location acc 
+
+
    (********************************************************************
    End helper functions.
  ********************************************************************)
@@ -62,7 +70,7 @@
 
    let adventure_tests =
    [
-    (* TODO: add tests for the Adventure module here *)
+    assert_equal (List.length(test_location_tile tiles location [])) 7
    ]
 
    let command_tests =
@@ -77,7 +85,7 @@
 
    let suite =
    "test suite for A2"  >::: List.flatten [
-    adventure_tests;
+    scrabble_tests;
     command_tests;
     state_tests;
    ]
