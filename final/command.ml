@@ -2,8 +2,6 @@ open Scrabble
 
 type object_phrase = string list
 type command = 
-  (* | Cell of Scrabble.grid
-     | Tile of Scrabble.tile *)
   | Cell of object_phrase
   | Tile of object_phrase
   | Remove
@@ -13,27 +11,11 @@ type command =
   | Quit
   | Stuck
 
-(* Cell (1,1)
-   have function that determines if cell is avail on board
-   Tile A
-   have function that determines if tile is avail in bag
-   function that updates the board and the tiles
-
-   function that takes in cell and tile and updates the state 
-   (board and tiles) *)
-
 type result = Legal of t | Illegal
 
 exception Empty
 
 exception Malformed
-
-(* return true or false *)
-(* let valid_cell cell =
-   let board = Scrabble.board in *)
-(* 
-let valid_play cell tile =
-if both are valid -> update board -> return board *)
 
 (** [eliminate_empty lst acc] is the list [lst] with all empty strings 
     removed. *)

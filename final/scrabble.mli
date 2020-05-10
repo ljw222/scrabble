@@ -84,3 +84,18 @@ val update_state: int -> t -> players -> t
 val return_current_score2: string -> t -> int
 
 val delete: grid -> t -> players -> t -> t -> t
+
+val occupied_cell: grid -> board -> bool
+
+val valid_tile_in_hand: Char.t -> tile list -> players -> bool
+
+val tile_hand_to_board: 
+  Char.t -> tile list -> grid -> tile list -> players -> tile list
+
+val string_of_tiles: tile list -> string
+
+val list_diff: 'a list -> 'a list -> 'a list -> 'a list
+
+val loc_in_tiles: tile list -> grid -> bool
+
+val tiles_in_player_hand: tile list -> string -> tile list -> tile list
