@@ -100,31 +100,37 @@ and check_helper start_of_turn_game current_game player =
     print_endline("");
     let new_score = 
       Scrabble.points_of_turn start_of_turn_game current_game in
-    match Command.parse (read_line ()) with
-    | Valid -> 
-      if (current_player_type = "player1")
-      then 
-        begin
-          print_endline("");
-          print_endline("Switch player!");
-          let new_player1 = Scrabble.update_player "player1" new_score in 
-          let new_state = State.update_player1 player new_player1 in
-          play_game current_game 
-            (Scrabble.refill_hand current_game new_player1) new_state
-        end
-      else 
-        begin 
-          print_endline("");
-          print_endline("Switch player!");
-          let new_player2 = Scrabble.update_player "player2" new_score in 
-          let new_state = State.update_player2 player new_player2 in
-          play_game current_game (Scrabble.refill_hand current_game new_player2) 
-            new_state
-        end
-    | Invalid -> print_endline("word not valid");
-      play_game start_of_turn_game current_game player
-    | Quit -> print_endline "Thanks for playing!"
-    | _ -> check_helper start_of_turn_game current_game player
+    if new_score >= State.winning_score player then
+      begin
+        print_endline("[Player __] won the game! yay!");
+        exit 0
+      end
+    else
+      match Command.parse (read_line ()) with
+      | Valid -> 
+        if (current_player_type = "player1")
+        then 
+          begin
+            print_endline("");
+            print_endline("Switch player!");
+            let new_player1 = Scrabble.update_player "player1" new_score in 
+            let new_state = State.update_player1 player new_player1 in
+            play_game current_game 
+              (Scrabble.refill_hand current_game new_player1) new_state
+          end
+        else 
+          begin 
+            print_endline("");
+            print_endline("Switch player!");
+            let new_player2 = Scrabble.update_player "player2" new_score in 
+            let new_state = State.update_player2 player new_player2 in
+            play_game current_game (Scrabble.refill_hand current_game new_player2) 
+              new_state
+          end
+      | Invalid -> print_endline("word not valid");
+        play_game start_of_turn_game current_game player
+      | Quit -> print_endline "Thanks for playing!"
+      | _ -> check_helper start_of_turn_game current_game player
   )
   else (print_endline("");
         print_string "Please enter a valid move. Try again";

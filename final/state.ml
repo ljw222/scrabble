@@ -11,7 +11,7 @@ type t = {
 }
 
 let init_state = {
-  winning_score = 20;
+  winning_score = 5;
   state = Ongoing;
   player_turn = Scrabble.Player1 (Scrabble.get_init_player1 ());
   player1 = Scrabble.Player1 (Scrabble.get_init_player1 ());

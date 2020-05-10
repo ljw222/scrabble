@@ -524,7 +524,6 @@ let check_if_valid beg_state end_state =
   let beg_board_tiles = occupied_grids beg_state.board.cells [] in 
   let end_board_tiles = occupied_grids end_state.board.cells [] in 
   let new_tiles = list_diff beg_board_tiles end_board_tiles [] in
-  print_string (print_tile_letters new_tiles "");
   (* first x coordinate in list of new tiles *)
   let first_x =
     match (List.nth new_tiles 0).location with 
