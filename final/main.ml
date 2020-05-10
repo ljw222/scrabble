@@ -168,30 +168,34 @@ let rec main () =
                   "\nWelcome to our Scrabble Inspired Game!\n");
   ANSITerminal.(print_string [blue]
                   "\nHere are some rules with examples:\n");
-  ANSITerminal.(print_string [black]
+  ANSITerminal.(print_string [white]
                   "\n1. Place a tile on the board \n");
   ANSITerminal.(print_string [green]
                   "cell (1,0)\n");
   ANSITerminal.(print_string [green]
                   "tile A\n");
-  ANSITerminal.(print_string [black]
+  ANSITerminal.(print_string [white]
                   "2. Remove a tile from the board\n");
   ANSITerminal.(print_string [green]
                   "cell (1,0)\n");
   ANSITerminal.(print_string [green]
                   "remove\n");
-  ANSITerminal.(print_string [black]
+  ANSITerminal.(print_string [white]
                   "3. Finish your turn by asking the other player to validate your input\n");
   ANSITerminal.(print_string [green]
                   "check\n");   
-  ANSITerminal.(print_string [black]
+  ANSITerminal.(print_string [white]
                   "4. When checking the words made of another player\n");
   ANSITerminal.(print_string [green]
                   "valid or invalid\n");
-  ANSITerminal.(print_string [black]
+  ANSITerminal.(print_string [white]
                   "5. Quit the game anytime with command\n");
   ANSITerminal.(print_string [green]
                   "quit\n");
+  ANSITerminal.(print_string [white]
+                  "6. If you don't have a move and want to skip your turn\n");
+  ANSITerminal.(print_string [green]
+                  "stuck\n");
   ANSITerminal.(print_string [blue]
                   "\nType 'start' to begin!\n");
   print_string  "> ";
