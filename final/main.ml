@@ -30,7 +30,7 @@ let basic_info start_of_turn_game current_game player =
     | Player2 _ -> "player2" in 
   print_endline("Current Player: " ^ player_type);
   let player_score = Int.to_string (State.get_player_score player_type player) in
-  print_endline("Score as of last turn:" ^ player_score);
+  print_endline("Score as of beginning of turn:" ^ player_score);
   print_endline("");
   Scrabble.print_board current_game.board;
   print_endline("");
@@ -137,27 +137,42 @@ and check_helper start_of_turn_game current_game player =
         print_endline("");
         play_game start_of_turn_game current_game player)
 
-(* check which player is currently playing (from the Scrabble.t list) *)
-(* and validate_check start_of_turn_game current_game player= 
-   match Command.parse (read_line ()) with
-   | Valid -> if (player = Scrabble.Player1 (Scrabble.get_init_player1 ()))
-   then (play_game current_game current_game (Scrabble.Player2 (Scrabble.get_init_player2 ())))
-   else play_game start_of_turn_game current_game player
-   | Invalid -> print_endline("word not valid");play_game start_of_turn_game current_game player
-   | _ -> failwith "type valid/invalid" *)
-(* make sure to remove all the new tiles from the board to the hand *)
-
 (** [main ()] prompts for the game to play, then starts it. *)
 let rec main () =
   ANSITerminal.(print_string [blue]
-                  "\n\nWelcome to our Scrabble Inspired Game!\n");
+                  "\nWelcome to our Scrabble Inspired Game!\n");
+  ANSITerminal.(print_string [blue]
+                  "\nHere are some rules with examples:\n");
+  ANSITerminal.(print_string [black]
+                  "\n1. Place a tile on the board \n");
+  ANSITerminal.(print_string [green]
+                  "\ncell (1,0)\n");
+  ANSITerminal.(print_string [green]
+                  "\ntile A\n");
+  ANSITerminal.(print_string [black]
+                  "\n2. Remove a tile from the board\n");
+  ANSITerminal.(print_string [green]
+                  "\ncell (1,0)\n");
+  ANSITerminal.(print_string [green]
+                  "\nremove\n");
+  ANSITerminal.(print_string [black]
+                  "\n3. Finish your turn by asking the other player to validate your input\n");
+  ANSITerminal.(print_string [green]
+                  "\ncheck\n");   
+  ANSITerminal.(print_string [black]
+                  "\n4. When checking the words made of another player\n");
+  ANSITerminal.(print_string [green]
+                  "\nvalid or invalid\n");
+  ANSITerminal.(print_string [black]
+                  "\n5. Quit the game anytime with command\n");
+  ANSITerminal.(print_string [green]
+                  "\nquit\n");
   ANSITerminal.(print_string [blue]
                   "\nType 'start' to begin!\n");
   print_string  "> ";
   match read_line () with
   | "start" -> 
     play_game (Scrabble.get_init_state ()) (Scrabble.get_init_state ()) (State.get_init_state ())
-  (* (State.player_turn (State.get_init_state ())) *)
   | _ -> main ()
 
 (* Execute the game engine. *)
