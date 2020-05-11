@@ -1,4 +1,3 @@
-(* open Scrabble *)
 type game_state = 
   | Ongoing
   | Done
@@ -9,6 +8,7 @@ type t = {
 }
 
 let init_state = {
+  (* this score can be changed, which may make testing easier *)
   winning_score = 50;
   state = Ongoing;
   player_turn = Scrabble.Player1 (Scrabble.get_init_player1 ())

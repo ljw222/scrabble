@@ -3,7 +3,8 @@
 module M = Author
 
 let () = 
-  if M.hours_worked < 0
+  if List.length M.hours_worked < 1
+  || List.exists (fun n -> n < 0) M.hours_worked
   then print_string
       "===========================================================\n\
        WARNING: \n\

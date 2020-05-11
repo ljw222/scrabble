@@ -92,45 +92,54 @@ and check_helper start_of_turn_game current_game player =
   in
   let turn_score = Scrabble.points_of_turn start_of_turn_game current_game in
   let new_score = current_score2 + turn_score in
-  if Scrabble.check_if_valid start_of_turn_game current_game then (
-    ANSITerminal.(print_string [blue]
-                    "\nOther player please confirm words\n");
-    Scrabble.print_words start_of_turn_game current_game;
-    print_endline("");
-    match Command.parse (read_line ()) with
-    | Valid -> if new_score >= State.winning_score (get_init_state ()) then
-        begin
-          print_endline(player_type ^ " won the game! Yay!");
-          exit 0
-
-        end
-      else if (player_type = "player1")
-      then (
-        ANSITerminal.(print_string [green]
-                        "\nSwitch player!\n");
-        play_game current_game (Scrabble.refill_hand current_game player 
-                                  new_score) 
-          (Scrabble.Player2 (Scrabble.get_init_player2 ())))
-      else (
-        ANSITerminal.(print_string [green]
-                        "\nSwitch player!\n");
-        play_game current_game (Scrabble.refill_hand current_game player 
-                                  new_score) 
-          (Scrabble.Player1 (Scrabble.get_init_player1 ())))
-    | Invalid -> 
-      ANSITerminal.(print_string [red]
-                      "\nThe other player says that your words aren't valid. 
-                      Try again\n");
-      play_game start_of_turn_game current_game player
-    | Quit -> print_endline "Thanks for playing!"
-    | _ -> check_helper start_of_turn_game current_game player
-  )
+  if Scrabble.check_if_valid start_of_turn_game current_game then 
+    begin
+      ANSITerminal.(print_string [blue]
+                      "\nOther player please confirm words\n");
+      Scrabble.print_words start_of_turn_game current_game;
+      print_endline("");
+      check_valid_helper start_of_turn_game current_game player new_score 
+        player_type
+    end
   else 
     begin
       ANSITerminal.(print_string [red]
                       "\nPlease enter a valid move. Try again\n");
       play_game start_of_turn_game current_game player
     end
+
+(** [check_valid_helper start_of_turn_game current_game player new_score 
+    player_type] is a helper for check_helper. Output deals with player reponse 
+    to checking if other player's words are valid *)
+and check_valid_helper start_of_turn_game current_game player new_score 
+    player_type = 
+  match Command.parse (read_line ()) with
+  | Valid -> 
+    if new_score >= State.winning_score (get_init_state ()) then
+      begin
+        print_endline(player_type ^ " won the game! Yay!");
+        exit 0
+      end
+    else if (player_type = "player1")
+    then (
+      ANSITerminal.(print_string [green]
+                      "\nSwitch player!\n");
+      play_game current_game (Scrabble.refill_hand current_game player 
+                                new_score) 
+        (Scrabble.Player2 (Scrabble.get_init_player2 ())))
+    else (
+      ANSITerminal.(print_string [green]
+                      "\nSwitch player!\n");
+      play_game current_game (Scrabble.refill_hand current_game player 
+                                new_score) 
+        (Scrabble.Player1 (Scrabble.get_init_player1 ())))
+  | Invalid -> 
+    ANSITerminal.(print_string [red]
+                    "\nThe other player says that your words aren't valid. 
+                      Try again\n");
+    play_game start_of_turn_game current_game player
+  | Quit -> print_endline "Thanks for playing!"
+  | _ -> check_helper start_of_turn_game current_game player
 
 (** [main ()] prompts for the game to play, then starts it. *)
 let rec main () =
