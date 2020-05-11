@@ -3,15 +3,24 @@ open Scrabble
 open Command
 open State
 
+(* TEST PLAN: *)
 
+(* 
+Most of our tests are testing the small helper functions that are 
+manipulating information about tile locations and our hand. This includes 
+testing for correct movement between Hand, Board, and Bag of tiles.  
 
-(* Test Plan *)
-(* Most of our tests are testing the small *)
-
-
-
-
-
+In testing what the whole Board contains, since there were too many tiles in 
+the Board to test with OUnit tests, we tested via “make play”. Because our game 
+displays based on results from the functions we implemented, this made it easier 
+to see if tiles were correctly moving between the bag/board/hand. This was the 
+same situation with testing our Bag of tiles. There’s more than 100 tiles in 
+the Bag, so it’d be too hard to assert if the Bag consisted of certain things. 
+Thus, we created all of these black box test cases that were developed for our 
+Scrabble.ml functions. These functions were created to carry out 
+straightforward results, so it was easy to see if they were doing what they 
+needed to do just by asserting what the end result was supposed to be. 
+*)
 
 (******************************************************************
    Here are some helper functions for your testing of set-like lists. 
