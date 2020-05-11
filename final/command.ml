@@ -1,9 +1,9 @@
 open Scrabble
 
-type object_phrase = string list
+type game_phrase = string list
 type command = 
-  | Cell of object_phrase
-  | Tile of object_phrase
+  | Cell of game_phrase
+  | Tile of game_phrase
   | Remove
   | Check
   | Valid

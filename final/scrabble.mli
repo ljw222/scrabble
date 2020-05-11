@@ -1,3 +1,16 @@
+(** 
+   Representation of dynamic scrabble state.
+
+   This module represents the state of an adventure as it is being played,
+   including the adventurer's current room, the rooms that have been visited,
+   and functions that cause the state to change.
+
+   This module represents the information and rules required for a scrabble 
+   game as it is being played, including the points and tiles availible, 
+   location of tiles, points of each player. and whether moves played are 
+   valid (i.e. follow the rules of our game)
+*)
+
 type x = int
 type y = int 
 type grid= (x*y)

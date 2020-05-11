@@ -6,7 +6,7 @@ open State
 
 
 (* Test Plan *)
-(*  Most of our tests are testing the small*)
+(* Most of our tests are testing the small *)
 
 
 

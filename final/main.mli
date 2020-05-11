@@ -1,5 +1,4 @@
 (** 
-   The main entry point for the game interface.
+   The main entry point for the scrabble game. This is where the interface is 
+   able to detect and display information about the game to the players.
 *)
-
-(* You are free to add more code here. *)

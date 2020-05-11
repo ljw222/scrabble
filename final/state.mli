@@ -1,12 +1,10 @@
 (** 
-   Representation of dynamic adventure state.
+   Representation of dynamic scrabble game state.
 
-   This module represents the state of an adventure as it is being played,
-   including the adventurer's current room, the rooms that have been visited,
-   and functions that cause the state to change.
+   This module represents the state of the scrabble game as two players play 
+   tthe game. Information such as the score of a player and players 
+   turn may cause the state to change.
 *)
-
-(* You are free to add more code here. *)
 
 type t 
 
