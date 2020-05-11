@@ -1,31 +1,33 @@
-We will be demoing functions in utop
+We will be demoing our Scrabble inspired game in utop. 
+Since this game is multiplayer (2), the grader will most likely have to play as both players. 
 
-1. Open utop and type: #use "scrabble.ml";;
-2. Show that the players are initially created to have 0 points
-    - init_player1;;
-3. Demo what one tile looks like/what attributes it contains through the 
-starting tile on the board
-  -  starting_tile;;
-4. All tiles of the game
-    - all_tiles;;
-5. Once game is started, 7 tiles are dealt to hand of players
-    - init_tiles_player1;;
-    - init_tiles_player2;;
-6. Initial board of game
-    - init_board;;
-7. Can't add multiple tiles in same grid location on board
-    - play (6,6) 'B' init_state;;
-8. Showing play function (adding tile to board)
-    - play (5,5) 'B' init_state;;
-9. Can only add tiles to the board that are in the bag
-    - can't add invalid tile
-          - play (2,2) '.' init_state;;
-    - if tile exists but is not in the bag, can't add to board (there are 4 'B's to start out with in the board)
-          - let empty_board = { all_tiles = all_tiles; board = init_board; players = [];};;
-          Following commands should be VALID:
-          - let b1 = play (0,1) 'B' empty_board;;
-          - let b2 = play (0,2) 'B' b1;;
-          - let b3 = play (0,3) 'B' b2;;
-          - let b4 = play (0,4) 'B' b3;;
-          This will be INVALID:
-          - play (0,5) 'B' b4;;
+
+The goal of the game is to take turn creating words from your hand of tile letters until a player achieves the "winning score" (can be changed on line 12 of state.ml for faster testing purposes if needed).  The longer the words, the rarer the tiles, the more points! 
+
+**INSTRUCTIONS**
+
+**Start Game**
+1. Navigate to our folder and type "make play" to start the game
+2. Type "start" to begin the game. The available commands/instructions are listed at the beginning of the game. 
+
+**Valid Move**
+3. Make a word: As Player1, type "cell (x,y)" coordinate to place "tile _" of choice from your hand of available tiles. 
+    ***Note: a valid move means all tiles placed on board are either in same column or row, touching a pre-existing tile on the board. Any violations will be caught later via "check" command.
+4. Repeat step 3 as many times as needed. Please create this word 
+5. Once Player1's word is created, type "check"
+6. Switching players, Player2 will now type either "valid" or "invalid" to confirm the word created. Type "valid".
+
+**Invalid Move**
+7. For Player2, repeat steps 3-5 again.
+8. When Player1 is checking the word though, type "invalid".
+
+**Remove Tile**
+9. As Player2, select a board cell with a tile in it by typing "cell (x,y)"
+10. When prompted for the tile input, type "remove" instead. This will remove the tile at that cell.
+11. Type "check" again.
+12. Player1 type "valid"
+
+**Skip Your Turn**
+13. Player1 will now type "stuck" to skip their turn. 
+
+**Complex Input**
