@@ -1,7 +1,5 @@
 type object_phrase = string list
 type command = 
-  (* | Cell of Scrabble.grid
-     | Tile of Scrabble.tile *)
   | Cell of object_phrase
   | Tile of object_phrase
   | Remove

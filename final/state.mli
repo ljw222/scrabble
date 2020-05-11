@@ -8,13 +8,6 @@
 
 (* You are free to add more code here. *)
 
-(**********************************************************************
- * DO NOT CHANGE THIS CODE
- * It is part of the interface the course staff will use to test your 
- * submission.
-*)
-
-(** The abstract type of values representing the game state. *)
 type t 
 
 type game_state = 

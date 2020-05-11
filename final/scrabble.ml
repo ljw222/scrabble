@@ -61,9 +61,11 @@ let rec create_init_tiles tiles_points acc counter =
                location=Bag;} in create_init_tiles t (new_tile::acc) (counter+1)
 
 let starting_tile = {id=0; letter='A'; point=1; location=Board (0,0)}
+
 (* all tiles in bag with starting_tile on board *)
 let all_tiles = 
-  starting_tile::(create_init_tiles (char_tiles@char_tiles@char_tiles@char_tiles) [] 1)
+  starting_tile::(create_init_tiles 
+                    (char_tiles@char_tiles@char_tiles@char_tiles) [] 1)
 
 (** [location_tile tiles location acc] is the list of tiles from [tiles] 
     that are located in [location]*)
@@ -74,8 +76,8 @@ let rec location_tile tiles location acc =
     if h.location = location then location_tile t location (h::acc) else 
       location_tile t location acc
 
-(** [choose_tile tiles player num_tiles] all tiles in [tiles] with a random tile location 
-    changed to be in the hand of [player] [num_tiles] times *)
+(** [choose_tile tiles player num_tiles] all tiles in [tiles] with a random tile 
+    location changed to be in the hand of [player] [num_tiles] times *)
 let rec choose_tile tiles player num_tiles =
   if num_tiles = 0 then tiles 
   else
@@ -83,18 +85,20 @@ let rec choose_tile tiles player num_tiles =
     let rand = Random.int((List.length bag_tiles) - 1) in
     let tile = List.nth tiles rand in
     let new_tile = 
-      {id=tile.id; letter=tile.letter; point= tile.point; location=Hand player} in
+      {id=tile.id; letter=tile.letter; point= tile.point; location=Hand player} 
+    in
     let updated_tiles = List.map (fun old_tile -> 
         if old_tile.id = new_tile.id then new_tile else old_tile) tiles in
     choose_tile updated_tiles player (num_tiles - 1)
 
-(* deal 7 tiles to player1 *)
 let init_tiles_player1 = 
-  choose_tile all_tiles (Player1 init_player1) 8
-(* deal 7 tiles to player2 *)
-let init_tiles_player2 = 
-  choose_tile init_tiles_player1 (Player2 init_player1) 7
+  choose_tile all_tiles (Player1 init_player1) 12
 
+let init_tiles_player2 = 
+  choose_tile init_tiles_player1 (Player2 init_player1) 11
+
+(** [create_init_board acc x y] creates the initial board state with dimensions 
+    [x] x [y] *)
 let rec create_init_board acc x y = 
   match x,y with
   | 0,0 -> acc
@@ -103,15 +107,21 @@ let rec create_init_board acc x y =
       if y = 0 then create_init_board (((x,y), None)::acc) (x-1) (9) else
         match x,y with
         | x,y -> 
-          if (y = 0 && x != 0) then create_init_board (((x,y), None)::acc) (x-1) (y)
-          else if (y != 0 && x <= 9) then create_init_board (((x,y), None)::acc) (x) (y-1)
+          if (y = 0 && x != 0) then 
+            create_init_board (((x,y), None)::acc) (x-1) (y)
+          else if (y != 0 && x <= 9) then 
+            create_init_board (((x,y), None)::acc) (x) (y-1)
           else create_init_board (((x,y), None)::acc) (x-1) (9)
     end
 
+(** [create_init_bonus1 acc x y] creates bonus square diagonal 1 on board with 
+    dimensions [x] x [y]*)
 let rec create_init_bonus1 acc x y = 
   if x >= 0 && y >= 0 then create_init_bonus1 (((x,y),2)::acc) (x-1) (y-1)
   else acc
 
+(** [create_init_bonus2 acc x y] creates bonus square diagonal 2 on board with 
+    dimensions [x] x [y]*)
 let rec create_init_bonus2 acc x y = 
   if x = 6 && y = 6 then create_init_bonus2 acc (x-1) (y+1)
   else if x >= 0 && y >= 0 then create_init_bonus2 (((x,y),2)::acc) (x-1) (y+1)
@@ -148,8 +158,30 @@ let occupied_cell cell board =
     | Some t -> true
     | None -> false
 
-(** [char_in_collection collection char] is true if a tile with the letter [char] is in 
-    tile collection [collection]. otherwise false *)
+(** [player_type player] player type of [player] *)
+let player_type player= 
+  match player with
+  | Player1 _ -> "player1"
+  | Player2 _ -> "player2" 
+
+(** [tiles_in_player_hand tiles player_type acc] is the list of tiles from
+    [tiles] that are located in [player_type hand]*)
+let rec tiles_in_player_hand tiles player_type acc =
+  match tiles with
+  | [] -> List.rev acc
+  | h::t -> 
+    begin
+      let tile_loc = 
+        match h.location with
+        | Hand (Player1 _) -> "player1"
+        | Hand (Player2 _) -> "player2"
+        | _ -> "" in 
+      if tile_loc = player_type then tiles_in_player_hand t player_type (h::acc) 
+      else tiles_in_player_hand t player_type acc
+    end
+
+(** [char_in_collection collection char] is true if a tile with the letter 
+    [char] is in tile collection [collection]. otherwise false *)
 let rec char_in_collection collection char = 
   match collection with
   | [] -> false
@@ -161,17 +193,11 @@ let valid_tile tile_letter all_tiles =
   let bag_tiles = location_tile all_tiles Bag [] in
   char_in_collection bag_tiles tile_letter 
 
-(** [valid_tile_in_hand tile_letter all_tiles player] is true if [tile] is available in the hand of 
-    [player]. Otherwise false *)
+(** [valid_tile_in_hand tile_letter all_tiles player] is true if [tile] is 
+    available in the hand of [player]. Otherwise false *)
 let valid_tile_in_hand tile_letter all_tiles player =
-  let tiles_in_hand = location_tile all_tiles (Hand player) [] in
+  let tiles_in_hand = tiles_in_player_hand all_tiles (player_type player) [] in
   char_in_collection tiles_in_hand tile_letter 
-
-let init_state = {
-  all_tiles = init_tiles_player2;
-  board = init_board;
-  players = [Player1 init_player1;Player2 init_player2];
-}
 
 (** [update_tile_loc tile_letter all_tiles cell acc] updates [all_tiles] with 
     the tile in the bag with letter [tile_letter] to be in the board *)
@@ -237,7 +263,8 @@ let rec update_board_cells board_cells tile cell acc =
     if g = cell then 
       begin
         let new_tile = 
-          {id=tile.id; letter=tile.letter; point=tile.point; location=Board cell} in
+          {id=tile.id; letter=tile.letter; point=tile.point; 
+           location=Board cell} in
         acc@((cell, Some new_tile)::t)
       end
     else update_board_cells t tile cell ((g,c)::acc)
@@ -280,7 +307,7 @@ let rec print_board board_cells acc x y =
   if acc mod 10 = 0 then print_endline("");
   if x = 0 && y <> 10 then print_string(Int.to_string y);
   match board_cells with
-  | [] -> print_string " ";
+  | [] -> print_string " "; print_endline("");
   | (grid,contents)::t -> 
     begin
       match contents with
@@ -320,26 +347,27 @@ let rec string_of_tiles hand_tiles =
 
 (** [print_hand player game_state] prints the hand of [player] *)
 let print_hand player game_state =
-  let hand_tiles = location_tile game_state.all_tiles (Hand player) [] in
-  print_string ("Hand:  [ " ^ (string_of_tiles hand_tiles) ^ "]")
+  let player_type = player_type player in 
+  let hand_tiles = tiles_in_player_hand game_state.all_tiles player_type [] in
+  begin
+    print_string ("Hand:  [ " ^ (string_of_tiles hand_tiles) ^ "]");
+    print_endline("");
+  end
 
-
-let player_type player= 
-  match player with
-  | Player1 _ -> "player1"
-  | Player2 _ -> "player2" 
-
-let update_player string score = 
-  if string="player1" then (Player1 {score=score}) else (Player2 {score=score})
+(**[update_player player_type score] updates player of type [player_type] to 
+   have the new score [score] *)
+let update_player player_type score = 
+  if player_type = "player1" then (Player1 {score=score}) 
+  else (Player2 {score=score})
 
 (** [refill_hand state player] refills hand of [player] to 7 tiles after turn is
     a valid check *)
-
-let refill_hand state player score= 
-  let tiles_in_hand = location_tile state.all_tiles (Hand player) [] in 
-  let num_to_refill = 7 - (List.length tiles_in_hand) in 
+let refill_hand state player score = 
+  let player_type = player_type player in
+  let tiles_in_hand = tiles_in_player_hand state.all_tiles player_type [] in
+  let num_to_refill = 10 - (List.length tiles_in_hand) in 
   let updated_tiles = choose_tile state.all_tiles player num_to_refill in 
-  if player_type player= "player1" then (
+  if player_type = "player1" then (
     {
       all_tiles = updated_tiles;
       board = state.board;
@@ -348,13 +376,15 @@ let refill_hand state player score=
         | h::t -> (update_player "player1" score)::t
     }
   )
-  else ({
+  else 
+    {
       all_tiles = updated_tiles;
       board = state.board;
       players = match state.players with
         | [] -> []
-        | h::t -> h::[(update_player "player2" score)]
-    })
+        | h::t -> h::[update_player "player2" score]
+    }
+
 (** [occupied_grids board_cells acc] is the list of tiles in [board_cells] *)
 let rec occupied_grids board_cells acc =
   match board_cells with
@@ -409,7 +439,8 @@ let rec cells_of_tiles tile_list acc =
     | Board grid -> cells_of_tiles t (grid::acc)
     | _ -> cells_of_tiles t acc
 
-(** [build_list start finish acc] is an numerical list from [start] to [finish] *)
+(** [build_list start finish acc] is an numerical list from [start] to 
+    [finish] *)
 let rec build_list start finish acc = 
   if finish = start then (finish::acc) else
     build_list start (finish - 1) (finish::acc)
@@ -421,13 +452,14 @@ let rec row_check_if_gaps_filled (beg_cells:grid list) (x_lst: int list) (y:int)
   match ordered_x with
   | [] -> true
   | x::t -> 
-    if List.mem x x_lst then true && (row_check_if_gaps_filled beg_cells x_lst y t)
+    if List.mem x x_lst then true && 
+                             (row_check_if_gaps_filled beg_cells x_lst y t)
     else 
     if List.mem (x,y) beg_cells then 
       true && (row_check_if_gaps_filled beg_cells x_lst y t) else false
 
 (** [helper_row x_lst beg_cells y] is true if the new tiles played in [x_list]
-    are valid moves in comparison to tiles in [beg_cells] list*)
+    are valid moves in comparison to tiles in [beg_cells] list *)
 let helper_row x_lst beg_cells y =
   let fst_x = List.nth x_lst 0 in
   let last_x = List.nth (List.rev x_lst) 0 in 
@@ -448,7 +480,8 @@ let rec col_check_if_gaps_filled (beg_cells:grid list) (y_lst: int list) (x:int)
   match ordered_y with
   | [] -> true
   | y::t -> 
-    if List.mem y y_lst then true && (col_check_if_gaps_filled beg_cells y_lst x t)
+    if List.mem y y_lst then true && 
+                             (col_check_if_gaps_filled beg_cells y_lst x t)
     else 
     if List.mem (x,y) beg_cells then 
       true && (col_check_if_gaps_filled beg_cells y_lst x t) else false
@@ -468,7 +501,8 @@ let helper_col y_lst beg_cells x =
     (* case where original tiles are dispursed inbetween new word formed *)
   else col_check_if_gaps_filled beg_cells y_lst x ordered_y
 
-(* returns true if all tiles on board in new_state are valid in comparison to beg_state  *)
+(** [check_if_valid beg_state end_state] is true if the turn spanning from 
+    [beg_state] to [end_state] consists of valid moves. Otherwise false.*)
 let check_if_valid beg_state end_state =
   let beg_board_tiles = occupied_grids beg_state.board.cells [] in 
   let end_board_tiles = occupied_grids end_state.board.cells [] in 
@@ -488,28 +522,31 @@ let check_if_valid beg_state end_state =
   (* check if existing tiles are touching new tiles *)
   if not valid_new_tiles then 
     begin
-      print_endline("New tiles are not placed in the same row/col");
+      ANSITerminal.(print_string [red]
+                      "\nNew tiles are not placed in the same row/col\n");
       false
     end
   else
-    (* if in same row, all y coordinates, if same col, all x  *)
-    let new_grids = cells_of_tiles new_tiles [] in
-    (* let contingent = [] in *)
-    if List.length new_tiles = 1 then 
-      begin
+    begin
+      let new_grids = cells_of_tiles new_tiles [] in
+      if List.length new_tiles = 1 then 
+        begin
+          let y_list = (List.sort compare (snd (List.split new_grids))) in 
+          let check_same_row = helper_col y_list (cells_of_tiles beg_board_tiles 
+                                                    []) first_x in
+          let x_list = (List.sort compare (fst (List.split new_grids))) in 
+          let check_same_col = helper_row x_list (cells_of_tiles beg_board_tiles 
+                                                    []) first_y in 
+          check_same_row || check_same_col
+        end 
+      else
+      if (same_row new_tiles first_x) then 
         let y_list = (List.sort compare (snd (List.split new_grids))) in 
-        let check_same_row = helper_col y_list (cells_of_tiles beg_board_tiles []) first_x in
+        helper_col y_list (cells_of_tiles beg_board_tiles []) first_x
+      else
         let x_list = (List.sort compare (fst (List.split new_grids))) in 
-        let check_same_col = helper_row x_list (cells_of_tiles beg_board_tiles []) first_y in 
-        check_same_row || check_same_col
-      end 
-    else
-    if (same_row new_tiles first_x) then 
-      let y_list = (List.sort compare (snd (List.split new_grids))) in 
-      helper_col y_list (cells_of_tiles beg_board_tiles []) first_x
-    else
-      let x_list = (List.sort compare (fst (List.split new_grids))) in 
-      helper_row x_list (cells_of_tiles beg_board_tiles []) first_y
+        helper_row x_list (cells_of_tiles beg_board_tiles []) first_y
+    end
 
 (** [loc_in_tiles tiles grid_loc] is true if there is a tile in [tiles] with 
     board location [grid_loc]. Otherwise false *)
@@ -533,7 +570,7 @@ let rec tile_with_loc tiles grid_loc =
 
 (** [tiles_in_row_above beg_board_tiles smallest_y_coord x_loc acc] is the list 
     of tiles that are in the column above/next location 
-    [x_loc],[smallest_y_coord]*)
+    [x_loc],[smallest_y_coord] *)
 let rec tiles_in_row_above beg_board_tiles smallest_y_coord x_loc acc =
   let smallest_y_coord = smallest_y_coord - 1 in 
   if loc_in_tiles beg_board_tiles (x_loc, smallest_y_coord) then 
@@ -545,7 +582,7 @@ let rec tiles_in_row_above beg_board_tiles smallest_y_coord x_loc acc =
 
 (** [tiles_in_col_left beg_board_tiles smallest_x_coord y_loc acc] is the list 
     of tiles that are in the column to the left/next location 
-    [y_loc],[smallest_x_coord]*)
+    [y_loc],[smallest_x_coord] *)
 let rec tiles_in_col_left beg_board_tiles smallest_x_coord y_loc acc =
   let smallest_x_coord = smallest_x_coord - 1 in 
   if loc_in_tiles beg_board_tiles (smallest_x_coord, y_loc) then 
@@ -565,7 +602,7 @@ let rec tiles_in_row_below beg_board_tiles largest_y_coord x_loc acc =
       let new_tile = tile_with_loc beg_board_tiles (x_loc, largest_y_coord) in
       tiles_in_row_below beg_board_tiles largest_y_coord x_loc (new_tile::acc)
     end
-  else acc
+  else List.rev acc
 
 (** [tiles_in_col_right beg_board_tiles largest_x_coord y_loc acc] is the list 
     of tiles that are in the column to the right/next location 
@@ -577,33 +614,34 @@ let rec tiles_in_col_right beg_board_tiles largest_x_coord y_loc acc =
       let new_tile = tile_with_loc beg_board_tiles (largest_x_coord, y_loc) in
       tiles_in_col_right beg_board_tiles largest_x_coord y_loc (new_tile::acc)
     end
-  else acc
+  else List.rev acc
 
 (** [tiles_in_col_middle beg_board_tiles y_list x_loc acc] is all the tiles in
     boead [beg_board_tiles] with y coordinate in [y_list] and x coordinate 
     [x_loc] *)
-let rec tiles_in_col_middle beg_board_tiles y_list x_loc acc = 
-  match y_list with 
-  | [] -> List.rev acc
-  | h::t -> 
+let rec tiles_in_col_middle beg_board_tiles smallest_y largest_y x_loc acc = 
+  if smallest_y <= largest_y then
     begin
       let tile_in_board = 
-        tile_with_loc beg_board_tiles (x_loc, (List.nth y_list 0)) in 
-      tiles_in_col_middle beg_board_tiles t x_loc (tile_in_board::acc)
+        tile_with_loc beg_board_tiles (x_loc, smallest_y) in 
+      tiles_in_col_middle beg_board_tiles (smallest_y + 1) 
+        largest_y x_loc (tile_in_board::acc)
     end
+  else List.rev acc
 
 (** [tiles_in_row_middle beg_board_tiles x_list y_loc acc] is all the tiles in
     boead [beg_board_tiles] with x coordinate in [x_list] and y coordinate 
     [x_loc] *)
-let rec tiles_in_row_middle beg_board_tiles x_list y_loc acc = 
-  match x_list with 
-  | [] -> List.rev acc
-  | h::t -> 
+let rec tiles_in_row_middle beg_board_tiles smallest_x largest_x y_loc acc = 
+  if smallest_x <= largest_x then
     begin
       let tile_in_board = 
-        tile_with_loc beg_board_tiles (h,y_loc) in 
-      tiles_in_row_middle beg_board_tiles t y_loc (tile_in_board::acc)
+        tile_with_loc beg_board_tiles (smallest_x, y_loc) in 
+      tiles_in_row_middle beg_board_tiles (smallest_x + 1) 
+        largest_x y_loc (tile_in_board::acc)
     end
+  else List.rev acc
+
 
 (** [entire_word_in_col beg_board_tiles y_list x_loc new_tiles] tiles of all 
     tiles in word in column *)
@@ -617,7 +655,8 @@ let entire_word_in_col beg_board_tiles y_list x_loc new_tiles =
   let tiles_below = 
     tiles_in_row_below beg_board_tiles largest_y_coord x_loc [] in
   let tiles_in_middle = 
-    tiles_in_col_middle (List.append beg_board_tiles new_tiles) y_list x_loc [] in
+    tiles_in_col_middle (List.append beg_board_tiles new_tiles) 
+      smallest_y_coord largest_y_coord x_loc [] in
   let all_tiles_in_word = tiles_above@tiles_in_middle@tiles_below in
   all_tiles_in_word
 
@@ -633,12 +672,13 @@ let entire_word_in_row beg_board_tiles x_list y_loc new_tiles =
   let tiles_right = 
     tiles_in_col_right beg_board_tiles largest_x_coord y_loc [] in
   let tiles_in_middle = 
-    tiles_in_row_middle (List.append beg_board_tiles new_tiles) x_list y_loc [] in
+    tiles_in_row_middle (List.append beg_board_tiles new_tiles) 
+      smallest_x_coord largest_x_coord y_loc [] in
   let all_tiles_in_word = tiles_left@tiles_in_middle@tiles_right in
   all_tiles_in_word
 
 (** [in_same_row tile_grid_list x] is true if all tiles in [tile_grid_list] s
-    hare the same [x] coordinate*)
+    hare the same [x] coordinate *)
 let rec in_same_row (tile_list:tile list) y =
   match tile_list with
   | [] -> true
@@ -652,7 +692,7 @@ let rec in_same_row (tile_list:tile list) y =
     end
 
 (** [in_same_col tile_grid_list y] is true if all tiles in [tile_grid_list] s
-    hare the same [y] coordinate*)
+    hare the same [y] coordinate *)
 let rec in_same_col (tile_list:tile list) x =
   match tile_list with
   | [] -> true
@@ -677,7 +717,6 @@ let find_horiz_word beg_board_tiles new_tile acc =
     | Board (x,y) -> x
     | _ -> failwith "tile not on the board" in 
   entire_word_in_col beg_board_tiles [y_coord] x_coord [new_tile]
-(* entire_word_in_row beg_board_tiles [x_coord] y_coord [new_tile] *)
 
 (** [find_vert_word beg_board_tiles new_tile acc] the vertical word in 
     [beg_board_tiles] to tile [new_tile] *)
@@ -691,10 +730,7 @@ let find_vert_word beg_board_tiles new_tile acc =
     | Board (x,y) -> x
     | _ -> failwith "tile not on the board" in 
   entire_word_in_row beg_board_tiles [x_coord] y_coord [new_tile]
-(* entire_word_in_col beg_board_tiles [y_coord] x_coord [new_tile] *)
 
-(* gets the secondary words (that are horizontal) when new tiles are visually 
-   in a COL *)
 (** [horizontal_secondary_words beg_board_tiles new_tiles acc] is the 
     secondary words (which are in horizontal) to the new tiles placed when
     they are vertically placed *)
@@ -704,12 +740,12 @@ let rec horizontal_secondary_words beg_board_tiles new_tiles acc =
   | new_tile::t -> 
     begin
       let word = find_horiz_word beg_board_tiles new_tile [] in
-      let new_words = horizontal_secondary_words beg_board_tiles t (word::acc) in 
-      List.filter (fun x -> if List.length x <> 1 then true else false) new_words
+      let new_words = horizontal_secondary_words beg_board_tiles t (word::acc) 
+      in 
+      List.filter (fun x -> if List.length x <> 1 then true else false) 
+        new_words
     end
 
-(* gets the secondary words (that are vertical) when new tiles are visually 
-   in a ROW *)
 (** [vertical_secondary_words beg_board_tiles new_tiles acc] is the 
     secondary words (which are in horizontal) to the new tiles placed when
     they are vertically placed *)
@@ -720,11 +756,12 @@ let rec vertical_secondary_words beg_board_tiles new_tiles acc =
     begin
       let word = find_vert_word beg_board_tiles new_tile [] in
       let new_words = vertical_secondary_words beg_board_tiles t (word::acc) in 
-      List.filter (fun x -> if List.length x <> 1 then true else false) new_words
+      List.filter (fun x -> if List.length x <> 1 then true else false) 
+        new_words
     end
 
 (** [new_words beg_state end_state] are all of the new words (in tile list form) 
-    from tiles that are placed in [end_state] from [beg_state]*)
+    from tiles that are placed in [end_state] from [beg_state] *)
 let new_words beg_state end_state =
   let beg_board_tiles = occupied_grids beg_state.board.cells [] in 
   let end_board_tiles = occupied_grids end_state.board.cells [] in 
@@ -737,7 +774,6 @@ let new_words beg_state end_state =
     match (List.nth new_tiles 0).location with 
     | Board (x,y) -> y 
     | _ -> failwith "not on board" in 
-
   let new_grids = cells_of_tiles new_tiles [] in
   if List.length new_tiles = 1 then 
     begin
@@ -760,23 +796,21 @@ let new_words beg_state end_state =
           primary_word::secondary_words
         end
     end
-  else
-    (* checking if visually in same column *)
-  if (in_same_row new_tiles first_y) then 
-    begin
-      let x_list = (List.sort compare (fst (List.split new_grids)))  in 
-      let primary_word = entire_word_in_row beg_board_tiles x_list first_y new_tiles in 
-      let secondary_words = horizontal_secondary_words beg_board_tiles new_tiles [] in 
-      primary_word::secondary_words
-    end
-    (* f visually in same row *)
-  else   
-    begin
-      let y_list = (List.sort compare (snd (List.split new_grids))) in
-      let primary_word = entire_word_in_col beg_board_tiles y_list first_x new_tiles in
-      let secondary_words = vertical_secondary_words beg_board_tiles new_tiles [] in 
-      primary_word::secondary_words
-    end
+  else begin
+    if (in_same_row new_tiles first_y) then 
+      begin
+        let x_list = (List.sort compare (fst (List.split new_grids)))  in 
+        let primary_word = entire_word_in_row beg_board_tiles x_list first_y new_tiles in 
+        let secondary_words = horizontal_secondary_words beg_board_tiles new_tiles [] in 
+        primary_word::secondary_words
+      end
+    else   
+      begin
+        let y_list = (List.sort compare (snd (List.split new_grids))) in
+        let primary_word = entire_word_in_col beg_board_tiles y_list first_x new_tiles in
+        let secondary_words = vertical_secondary_words beg_board_tiles new_tiles [] in 
+        primary_word::secondary_words
+      end end
 
 (** [word_tiles_string tile_list acc] the word formed by tiles in [tile_list] *)
 let rec word_tiles_string tile_list acc = 
@@ -798,12 +832,63 @@ let print_words beg_state end_state =
   let all_new_words = new_words beg_state end_state in 
   print_endline(list_list_tiles_string all_new_words "")
 
+(** [location_lst new_tiles acc] is the location_id list of tiles in 
+    [new_tiles] *)
+let rec location_lst new_tiles acc = 
+  match new_tiles with
+  | h::t-> location_lst t (h.location::acc)
+  | [] -> acc
+
+(** [grid_lst loc_lst acc] is the grid list of tiles with locations in  
+    [loc_lst] *)
+let rec grid_lst loc_lst acc = 
+  match loc_lst with
+  | (Board grid )::t -> grid_lst t (grid::acc)
+  | _ :: t-> grid_lst t acc
+  | [] -> acc
+
+(** [delete cell state player] removes tile in [cell] from board in [state] *) 
+let delete cell state player beg_state end_state = 
+  let beg_board_tiles = occupied_grids beg_state.board.cells [] in 
+  let end_board_tiles = occupied_grids end_state.board.cells [] in 
+  let new_tiles = list_diff beg_board_tiles end_board_tiles [] in
+  let new_loc = location_lst new_tiles [] in
+  let new_grid = grid_lst new_loc [] in
+
+  if (occupied_cell cell state.board) && (List.mem cell new_grid) then 
+    begin
+      let update_board = 
+        {
+          cells = rem_board_cells state.board.cells cell [];
+          point_bonus=state.board.point_bonus;
+        } in
+      let updated_tiles = tile_board_to_hand state.all_tiles cell [] player in 
+      {
+        all_tiles = updated_tiles;
+        board = update_board;
+        players = state.players;
+      }
+    end
+  else 
+  if (not (valid_cell cell state.board)) then 
+    begin
+      print_endline("Cell is not available"); 
+      raise Invalid_Play
+    end
+  else 
+    begin
+      print_endline("Tile is not available in selected cell"); 
+      raise Invalid_Play
+    end
+
 (** [play cell tile_letter state] if the state when tile with [tile_letter] is 
     put in [cell] given current state [state] *)
 let play cell tile_letter state player = 
-  if (valid_cell cell state.board) && (valid_tile_in_hand tile_letter state.all_tiles player) then
+  if (valid_cell cell state.board) && 
+     (valid_tile_in_hand tile_letter state.all_tiles player) then
     begin
-      let tiles_in_hand = location_tile state.all_tiles (Hand player) [] in 
+      let tiles_in_hand = 
+        tiles_in_player_hand state.all_tiles (player_type player) [] in
       let updated_tile = add_tile_to_board tiles_in_hand tile_letter cell in
       let updated_board = 
         {
@@ -818,56 +903,43 @@ let play cell tile_letter state player =
         players = state.players;
       }
     end
-  else (if (not (valid_cell cell state.board)) then 
-          (print_endline("Cell is not available"); raise Invalid_Play)
-        else (print_endline("Tile is not available in your hand"); 
-              raise Invalid_Play))
+  else if (not (valid_cell cell state.board)) then 
+    begin
+      print_endline("Cell is not available"); raise Invalid_Play
+    end
+  else 
+    begin
+      print_endline("Tile is not available in your hand"); raise Invalid_Play
+    end
 
-(** [delete cell state player] removes tile in [cell] from board in [state] *) 
-let delete cell state player = 
-  if (occupied_cell cell state.board) 
-  then (
-    (* let tile_at_grid = location_tile state.all_tiles (Board cell) [] in  *)
-    (* let update_tile = return_tile_to_hand cell tile_at_grid player in  *)
-    let update_board = 
-      {
-        cells = rem_board_cells state.board.cells cell [];
-        point_bonus=state.board.point_bonus;
-      } in
-    let updated_tiles = tile_board_to_hand state.all_tiles cell [] player in 
-    {
-      all_tiles = updated_tiles;
-      board = update_board;
-      players = state.players;
-    }
-  )
-  else (if (not (valid_cell cell state.board)) then 
-          (print_endline("Cell is not available"); raise Invalid_Play)
-        else (print_endline("Tile is not available in selected cell"); 
-              raise Invalid_Play))
-
+(** [return_current_score player] is the score of [player] *)
 let return_current_score player = 
   match player with
   | Player1 p1 -> p1.score
   | Player2 p2 -> p2.score
 
-let return_current_score2 player_type state : int= 
-  if player_type = "player1" then (
-    match state.players with
-    | [] -> 0
-    | h::t -> begin
+(** [return_current_score2 player_type state ] is the score of [player_type] 
+    in game state [state] *)
+let return_current_score2 player_type state = 
+  if player_type = "player1" then 
+    begin
+      match state.players with
+      | [] -> 0
+      | h::t -> 
         match h with
         | Player1 p1 -> p1.score
         | Player2 p2 -> p2.score
-      end
-  ) else
-    (match List.rev state.players with
-     | [] -> 0
-     | h::t -> begin
-         match h with
-         | Player1 p1 -> p1.score
-         | Player2 p2 -> p2.score
-       end)
+    end 
+  else
+    begin
+      match List.rev state.players with
+      | [] -> 0
+      | h::t -> 
+        match h with
+        | Player1 p1 -> p1.score
+        | Player2 p2 -> p2.score
+    end
+
 (** [points_of_word tile_list acc] the points of word tiles in [tile_list] *)
 let rec points_of_word tile_list acc = 
   match tile_list with 
@@ -888,9 +960,9 @@ let points_of_turn beg_state end_state =
   let all_new_words = new_words beg_state end_state in 
   list_of_word_tiles all_new_words 0
 
-(** [update_player player_type new_score] updates 
-    [player_type]'s score to be [new_score] *)
-let rec update_player1 new_score current_state acc= 
+(** [update_player1 new_score current_state acc] updates player1's score in 
+    [current_state] to be [new_score] *)
+let rec update_player1 new_score current_state acc = 
   match current_state.all_tiles with
   | h::t ->
     begin
@@ -909,8 +981,9 @@ let rec update_player1 new_score current_state acc=
   | [] -> print_endline("not in player1");
     failwith "not in player1"
 
-
-let rec update_player2 new_score current_state acc= 
+(** [update_player2 new_score current_state acc] updates player2's score in 
+    [current_state] to be [new_score] *)
+let rec update_player2 new_score current_state acc = 
   match current_state.all_tiles with
   | h::t ->
     begin
@@ -929,17 +1002,19 @@ let rec update_player2 new_score current_state acc=
   | [] -> print_endline("not in player1");
     failwith "not in player1"
 
-let update_state new_score current_state player= 
-  if (player_type player) = "player1" then (
+(** [update_state new_score current_state player] updates [current_state] when 
+    [player]'s score changes to [new_score]*)
+let update_state new_score current_state player = 
+  if (player_type player) = "player1" then 
     {
       all_tiles= (update_player1 new_score current_state []);
       board=current_state.board;
       players=current_state.players
     }
-  )
-  else (if ((player_type player) = "player2") then ({
+  else if ((player_type player) = "player2") then 
+    {
       all_tiles= (update_player2 new_score current_state []);
       board=current_state.board;
       players=current_state.players
-    }) else (failwith "not in either player's hand"))
-
+    }
+  else failwith "not in either player's hand"
