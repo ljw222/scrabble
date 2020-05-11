@@ -25,8 +25,6 @@ let rec eliminate_empty lst acc=
   | h::t -> if h = " " || h = "" then eliminate_empty t acc
     else eliminate_empty t (h::acc)
 
-(** [parse str] is the list [lst] with all empty strings 
-    removed. *)
 let parse str =
   let parsed_str = String.split_on_char ' ' str in
   let cleaned_lst = List.rev (eliminate_empty parsed_str []) in 

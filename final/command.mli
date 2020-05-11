@@ -27,4 +27,5 @@ exception Empty
 (** Raised when a malformed command is encountered. *)
 exception Malformed
 
+(** [parse str] is the list [lst] with all empty strings removed. *)
 val parse : string -> command
