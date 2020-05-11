@@ -9,6 +9,7 @@ type command =
   | Valid
   | Invalid
   | Quit
+  | Stuck
 
 (** Raised when an empty command is parsed. *)
 exception Empty

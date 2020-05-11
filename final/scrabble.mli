@@ -67,7 +67,7 @@ val get_init_player2: unit -> player
 
 val print_hand: players -> t -> unit
 
-val refill_hand: t -> players -> t
+val refill_hand: t -> players -> int -> t
 
 val check_if_valid: t -> t -> bool
 
@@ -75,8 +75,12 @@ val delete: grid -> t -> players -> t
 
 val print_words: t -> t -> unit
 
+val return_current_score: players -> int
+
 val points_of_turn: t -> t -> int
 
 val update_player: string -> int -> players
 
-val player_score: players -> string -> int
+val update_state: int -> t -> players -> t
+
+val return_current_score2: string -> t -> int
